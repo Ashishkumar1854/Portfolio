@@ -2,8 +2,32 @@
 @config "../tailwind.config.js";
 
 @layer base {
+  :root {
+    --color-bg-primary: #0a0a0f;
+    --color-bg-secondary: #111118;
+    --color-bg-card: #16161e;
+    --color-bg-elevated: #1e1e2a;
+    --color-border-subtle: rgba(255,255,255,0.07);
+    --color-border-active: rgba(255,255,255,0.15);
+    --color-text-primary: #f0f0fa;
+    --color-text-secondary: #9898b0;
+    --color-text-muted: #5a5a72;
+  }
+
+  .light {
+    --color-bg-primary: #fafafe;
+    --color-bg-secondary: #f0f0f5;
+    --color-bg-card: #ffffff;
+    --color-bg-elevated: #e5e5eb;
+    --color-border-subtle: rgba(0,0,0,0.1);
+    --color-border-active: rgba(0,0,0,0.2);
+    --color-text-primary: #0a0a1a;
+    --color-text-secondary: #44445a;
+    --color-text-muted: #71718a;
+  }
+
   body {
-    @apply bg-bg-primary text-text-primary font-body antialiased;
+    @apply bg-bg-primary text-text-primary font-body antialiased transition-colors duration-300;
   }
   
   .container { 
@@ -48,3 +72,118 @@
     background-size: 64px 64px;
   }
 }
+
+/* Custom rich markdown / HTML content styling */
+.markdown-content h1 {
+  @apply text-2xl font-bold font-display text-text-primary mt-6 mb-3;
+}
+.markdown-content h2 {
+  @apply text-xl font-bold font-display text-text-primary mt-5 mb-2.5;
+}
+.markdown-content h3 {
+  @apply text-lg font-bold font-display text-text-primary mt-4 mb-2;
+}
+.markdown-content p {
+  @apply text-sm text-text-secondary leading-relaxed mb-4;
+}
+.markdown-content ul {
+  @apply list-disc list-inside space-y-1.5 my-3 pl-2;
+}
+.markdown-content ol {
+  @apply list-decimal list-inside space-y-1.5 my-3 pl-2;
+}
+.markdown-content li {
+  @apply text-sm text-text-secondary leading-relaxed;
+}
+.markdown-content pre, .markdown-content pre.ql-syntax {
+  @apply bg-bg-primary border border-border-subtle rounded-xl p-4 my-4 overflow-x-auto text-xs font-mono text-text-primary leading-relaxed;
+}
+.markdown-content code {
+  @apply bg-bg-elevated text-accent-cyan px-1.5 py-0.5 rounded text-xs font-mono;
+}
+.markdown-content pre code {
+  @apply bg-transparent p-0 text-text-primary block;
+}
+.markdown-content a {
+  @apply text-accent-blue hover:underline font-medium;
+}
+.markdown-content img {
+  @apply rounded-xl border border-border-subtle my-6 max-h-[400px] object-cover bg-bg-secondary shadow-md;
+}
+.markdown-content blockquote {
+  @apply border-l-4 border-accent-purple bg-bg-primary/40 pl-4 py-2 my-4 rounded-r-lg italic text-text-secondary text-sm;
+}
+
+/* Blog detail rich content — dark sleek code blocks */
+.blog-content pre,
+.blog-content pre.ql-syntax {
+  background: #090c14 !important;
+  border: 1px solid rgba(99, 179, 237, 0.15) !important;
+  border-left: 3px solid rgba(99, 179, 237, 0.5) !important;
+  border-radius: 12px !important;
+  padding: 1.25rem 1.5rem !important;
+  margin: 1.5rem 0 !important;
+  overflow-x: auto;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255,255,255,0.03);
+}
+.blog-content pre code,
+.blog-content pre.ql-syntax {
+  color: #a8d8f0 !important;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace !important;
+  font-size: 0.8rem !important;
+  line-height: 1.7 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  display: block;
+  white-space: pre;
+}
+.blog-content code:not(pre code) {
+  background: rgba(10, 30, 60, 0.7) !important;
+  border: 1px solid rgba(99, 179, 237, 0.2) !important;
+  color: #63b3ed !important;
+  padding: 0.15em 0.45em !important;
+  border-radius: 5px !important;
+  font-family: 'JetBrains Mono', ui-monospace, monospace !important;
+  font-size: 0.82em !important;
+}
+.blog-content h1, .blog-content h2, .blog-content h3 {
+  @apply font-display font-bold text-text-primary;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+.blog-content h1 { font-size: 1.75rem; }
+.blog-content h2 { font-size: 1.35rem; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 0.5rem; }
+.blog-content h3 { font-size: 1.1rem; }
+.blog-content p { @apply text-text-secondary leading-relaxed; margin-bottom: 1rem; }
+.blog-content ul, .blog-content ol { @apply pl-5 my-4 space-y-1.5; }
+.blog-content ul { list-style: disc; }
+.blog-content ol { list-style: decimal; }
+.blog-content li { @apply text-text-secondary leading-relaxed; }
+.blog-content blockquote {
+  border-left: 4px solid rgba(79, 142, 255, 0.5);
+  background: rgba(79, 142, 255, 0.05);
+  padding: 0.75rem 1.25rem;
+  border-radius: 0 8px 8px 0;
+  margin: 1.25rem 0;
+  color: #9898b0;
+  font-style: italic;
+}
+.blog-content a { @apply text-accent-blue hover:underline; }
+.blog-content strong { @apply text-text-primary font-bold; }
+.blog-content img { @apply rounded-2xl border border-border-subtle my-6 w-full object-cover; }
+
+/* Custom scrollbar utility for sidebar and containers */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
