@@ -41,7 +41,7 @@ export const seedDatabase = async () => {
     if (badgeCount === 0) {
       console.log('Seeding default Trust Badges...');
       await TrustBadge.insertMany([
-        { icon: '🚀', text: 'Founder of Phoneo', order: 0 },
+        { icon: '🚀', text: 'Founder of AiGateway', order: 0 },
         { icon: '🏆', text: 'NCIIPC–AICTE Pentathon Finalist', order: 1 },
         { icon: '🥇', text: 'CIH 2.0 National Hackathon Finalist', order: 2 },
         { icon: '🎓', text: 'B.Tech IT Graduate', order: 3 }

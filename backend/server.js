@@ -55,9 +55,16 @@ const allowedOrigins = [
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
+    
+    const isLocalhost = origin.startsWith('http://localhost') || 
+                        origin.startsWith('https://localhost') || 
+                        origin.startsWith('http://127.0.0.1') || 
+                        origin.startsWith('https://127.0.0.1');
+                        
+    if (allowedOrigins.includes(origin) || isLocalhost) {
       return callback(null, true);
     } else {
+      console.log('CORS rejected origin:', origin);
       return callback(new Error('Not allowed by CORS'), false);
     }
   },
