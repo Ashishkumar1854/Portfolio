@@ -52,6 +52,49 @@
     animation: fireText 1.1s ease-in-out infinite;
   }
 
+  .hero-galaxy-card {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    border: 1px solid rgba(127, 151, 255, 0.22);
+    background:
+      radial-gradient(circle at 18% 18%, rgba(34, 211, 238, 0.18), transparent 28%),
+      radial-gradient(circle at 78% 26%, rgba(168, 85, 247, 0.18), transparent 30%),
+      radial-gradient(circle at 50% 105%, rgba(79, 142, 255, 0.12), transparent 38%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      0 24px 80px rgba(79, 142, 255, 0.14),
+      0 0 0 1px rgba(255, 255, 255, 0.05);
+  }
+
+  .hero-galaxy-card::before {
+    content: '';
+    position: absolute;
+    inset: -45%;
+    z-index: -2;
+    background:
+      radial-gradient(circle, rgba(255, 255, 255, 0.8) 0 1px, transparent 1.5px) 0 0 / 34px 34px,
+      radial-gradient(circle, rgba(34, 211, 238, 0.7) 0 1px, transparent 1.6px) 17px 21px / 48px 48px,
+      conic-gradient(from 120deg, rgba(79, 142, 255, 0.2), rgba(168, 85, 247, 0.3), rgba(34, 211, 238, 0.16), rgba(79, 142, 255, 0.2));
+    opacity: 0.55;
+    animation: galaxyDrift 18s linear infinite;
+  }
+
+  .hero-galaxy-card::after {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    z-index: -1;
+    border-radius: inherit;
+    background:
+      linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent),
+      radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.18), transparent 42%);
+    opacity: 0.45;
+    mask-image: linear-gradient(90deg, transparent, black 24%, black 76%, transparent);
+    animation: galaxyShimmer 4s ease-in-out infinite;
+  }
+
   .ai-orbit {
     position: relative;
     width: 104px;
@@ -145,6 +188,50 @@
     padding: 0.85rem 1rem;
     box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18), 0 0 24px rgba(79, 142, 255, 0.12);
   }
+
+  @media (max-width: 767px) {
+    .ai-orbit {
+      width: 84px;
+      height: 84px;
+    }
+
+    .ai-orbit-ring {
+      inset: 9px;
+    }
+
+    .ai-orbit-ring::before,
+    .ai-orbit-ring::after {
+      height: 66px;
+    }
+
+    .ai-orbit-core {
+      width: 36px;
+      height: 36px;
+      font-size: 0.8rem;
+    }
+
+    .orbit-node {
+      width: 28px;
+      height: 28px;
+      font-size: 0.47rem;
+    }
+
+    .orbit-node-top {
+      top: -14px;
+    }
+
+    .orbit-node-right {
+      right: -14px;
+    }
+
+    .orbit-node-bottom {
+      bottom: -14px;
+    }
+
+    .orbit-node-left {
+      left: -14px;
+    }
+  }
   
   .hero-bg::before {
     content: '';
@@ -184,6 +271,23 @@
     50% {
       background-position: 100% 50%;
       filter: drop-shadow(0 0 10px rgba(255, 61, 0, 0.5));
+    }
+  }
+
+  @keyframes galaxyDrift {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes galaxyShimmer {
+    0%, 100% {
+      opacity: 0.28;
+      transform: translateX(-8%);
+    }
+    50% {
+      opacity: 0.55;
+      transform: translateX(8%);
     }
   }
 

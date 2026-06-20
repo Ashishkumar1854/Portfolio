@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Workflow, Layers, Globe, Brain, Cpu } from 'lucide-react';
+import { motion } from 'framer-motion';
 import SectionHeading from '../components/ui/SectionHeading';
 import SkillIcon from '../components/ui/SkillIcon';
 import useApi from '../hooks/useApi';
@@ -60,17 +60,17 @@ const EXPERTISE = [
 /* ─── Summary highlight boxes ─── */
 const HIGHLIGHTS = [
   {
-    icon: '⚡',
+    icon: <Workflow size={24} />,
     title: 'End-to-end Automation',
     desc: 'From trigger to action — I build workflows that run on their own so you never miss a step.',
   },
   {
-    icon: '🤖',
+    icon: <Bot size={24} />,
     title: 'AI-powered Agents',
     desc: 'Custom LLM agents with memory, tools, and RAG pipelines that actually solve real problems.',
   },
   {
-    icon: '🏗️',
+    icon: <Layers size={24} />,
     title: 'Scalable SaaS Builds',
     desc: 'Full-stack MERN products with auth, billing, dashboards — shipped fast, built to scale.',
   },
@@ -119,21 +119,18 @@ const Skills = () => {
         {/* ── Highlight boxes ── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-14">
           {HIGHLIGHTS.map((h, i) => (
-            <motion.div
+            <div
               key={h.title}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="bg-bg-card/60 border border-border-subtle rounded-2xl p-5 flex gap-4 items-start hover:border-accent-blue/25 transition-all group"
+              className="bg-bg-card/60 border border-border-subtle rounded-2xl p-5 flex gap-4 items-start hover:border-accent-blue/25 transition-all group overflow-hidden"
             >
-              <div className="text-2xl flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-accent-blue/10 text-accent-blue flex-shrink-0 mt-0.5 flex items-center justify-center group-hover:scale-110 transition-transform">
                 {h.icon}
               </div>
               <div>
                 <h3 className="text-sm font-bold text-text-primary mb-1">{h.title}</h3>
                 <p className="text-xs text-text-muted leading-relaxed">{h.desc}</p>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
@@ -144,20 +141,16 @@ const Skills = () => {
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {EXPERTISE.map((e, i) => (
-              <motion.div
+              <div
                 key={e.label}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.07 }}
-                whileHover={{ y: -4, scale: 1.03 }}
-                className={`bg-gradient-to-b ${e.color} border ${e.border} rounded-2xl p-4 flex flex-col items-center gap-3 text-center cursor-default`}
+                className={`bg-bg-card border ${e.border} rounded-2xl p-4 flex flex-col items-center gap-3 text-center cursor-default transition-all duration-300 hover:-translate-y-1 hover:scale-[1.03] hover:shadow-md transform-gpu will-change-transform`}
               >
                 <div className={`w-10 h-10 rounded-xl ${e.iconBg} flex items-center justify-center`}>
                   {e.icon}
                 </div>
                 <p className="text-xs font-semibold text-text-primary leading-tight">{e.label}</p>
                 <Stars count={e.stars} />
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -180,7 +173,7 @@ const Skills = () => {
         </div>
 
         {/* ── Skills grid ── */}
-        <div className="bg-bg-card/50 backdrop-blur-sm border border-border-subtle rounded-3xl p-6 md:p-8 min-h-[300px]">
+        <div className="bg-bg-card/95 sm:bg-bg-card/50 md:backdrop-blur-sm border border-border-subtle rounded-3xl p-6 md:p-8 min-h-[300px]">
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[1, 2, 3, 4].map(i => (
@@ -188,21 +181,10 @@ const Skills = () => {
               ))}
             </div>
           ) : filteredSkills.length > 0 ? (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.25 }}
-                className="grid grid-cols-1 md:grid-cols-2 gap-4"
-              >
+            <div key={activeTab} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredSkills.map((skill, index) => (
-                  <motion.div
+                  <div
                     key={skill._id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
                     className="p-4 bg-bg-elevated border border-border-subtle rounded-2xl flex flex-col gap-3 hover:border-accent-blue/20 transition-all"
                   >
                     <div className="flex justify-between items-center">
@@ -232,18 +214,15 @@ const Skills = () => {
                         <span className="text-[10px] text-text-muted font-mono">{skill.proficiency}%</span>
                       </div>
                       <div className="w-full h-1.5 bg-bg-primary rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${skill.proficiency}%` }}
-                          transition={{ duration: 1, delay: 0.2, ease: 'easeOut' }}
+                        <div
+                          style={{ width: `${skill.proficiency}%` }}
                           className="h-full bg-gradient-to-r from-accent-blue to-accent-purple rounded-full"
                         />
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
-              </motion.div>
-            </AnimatePresence>
+              </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-[200px] gap-3 text-text-muted">
               <span className="text-3xl opacity-30">🔧</span>

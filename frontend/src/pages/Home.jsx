@@ -382,15 +382,21 @@ const Home = () => {
     },
   ];
 
-  const displayedAchievements =
+  const dbAchievements =
     !achLoading && achievements && achievements.length > 0
-      ? achievements.slice(0, 4).map((a) => ({
-          label: a.label,
-          value: a.value,
-          suffix: a.suffix || "+",
-          icon: <Trophy size={20} className="text-yellow-400 mx-auto" />,
-        }))
-      : defaultAchievements;
+      ? achievements
+          .filter((a) => Number.isFinite(Number.parseInt(a.value, 10)))
+          .slice(0, 4)
+          .map((a) => ({
+            label: a.label,
+            value: a.value,
+            suffix: a.suffix || "+",
+            icon: <Trophy size={20} className="text-yellow-400 mx-auto" />,
+          }))
+      : [];
+
+  const displayedAchievements =
+    dbAchievements.length === 4 ? dbAchievements : defaultAchievements;
 
   /* resolving dynamic values with seeder fallbacks */
   const displayedConfig = homeConfig || DEFAULT_HOME_CONFIG;
@@ -461,9 +467,9 @@ const Home = () => {
             initial={{ opacity: 0, y: -14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="mx-auto mb-6 grid w-full max-w-[920px] grid-cols-1 items-center gap-5 rounded-[2rem] border border-border-subtle bg-bg-primary/20 px-7 py-3 backdrop-blur-xs md:grid-cols-[1fr_auto_1fr] lg:mb-7 xl:max-w-[1040px]"
+            className="hero-galaxy-card mx-auto mb-6 grid w-full max-w-[920px] grid-cols-1 items-center gap-5 rounded-[2rem] px-7 py-3 backdrop-blur-xs md:grid-cols-[1fr_auto_1fr] lg:mb-7 xl:max-w-[1040px]"
           >
-            <div className="hidden justify-center md:flex">
+            <div className="flex justify-center">
               <div
                 className="ai-orbit"
                 aria-label="AI hub orchestrating n8n, React, Node, and CI/CD"

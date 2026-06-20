@@ -51,8 +51,8 @@ const Navbar = () => {
     <nav
       className={`sticky top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'bg-bg-primary/90 backdrop-blur-glass border-b border-border-subtle shadow-sm'
-          : 'bg-bg-primary/70 backdrop-blur-glass border-b border-transparent'
+          ? 'bg-bg-primary/95 md:bg-bg-primary/90 md:backdrop-blur-glass border-b border-border-subtle shadow-sm'
+          : 'bg-bg-primary md:bg-bg-primary/70 md:backdrop-blur-glass border-b border-transparent'
       } h-16`}
     >
       <div className="container h-full mx-auto flex items-center justify-between">

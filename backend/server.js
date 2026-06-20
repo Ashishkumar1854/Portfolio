@@ -59,7 +59,15 @@ app.use(cors({
     const isLocalhost = origin.startsWith('http://localhost') || 
                         origin.startsWith('https://localhost') || 
                         origin.startsWith('http://127.0.0.1') || 
-                        origin.startsWith('https://127.0.0.1');
+                        origin.startsWith('https://127.0.0.1') ||
+                        origin.startsWith('http://192.168.') ||
+                        origin.startsWith('https://192.168.') ||
+                        origin.startsWith('http://10.') ||
+                        origin.startsWith('https://10.') ||
+                        origin.startsWith('http://172.') ||
+                        origin.startsWith('https://172.') ||
+                        origin.startsWith('http://168.') ||
+                        origin.startsWith('https://168.');
                         
     if (allowedOrigins.includes(origin) || isLocalhost) {
       return callback(null, true);
