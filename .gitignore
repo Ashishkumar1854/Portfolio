@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment files
+.env
+.env.*
+.env.example
+**/.env
+**/.env.*
+**/.env.example
+
+# Build output
+dist/
+dist-ssr/
+build/
+coverage/
+**/dist/
+**/dist-ssr/
+**/build/
+**/coverage/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime and upload output
+uploads/
+**/uploads/
+tmp/
+temp/
+
+# Local docs / scratch files
+files/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Tool caches
+.cache/
+.eslintcache
+.vite/
+*.tsbuildinfo
