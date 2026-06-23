@@ -189,6 +189,234 @@
     box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18), 0 0 24px rgba(79, 142, 255, 0.12);
   }
 
+  .skills-3d-stage {
+    perspective: 1200px;
+    transform-style: preserve-3d;
+    overflow: visible;
+  }
+
+  .skills-3d-card,
+  .expertise-3d-card {
+    position: relative;
+    overflow: visible;
+    isolation: isolate;
+    background:
+      radial-gradient(circle at 18% 0%, rgba(79, 142, 255, 0.16), transparent 35%),
+      linear-gradient(145deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.54));
+    border: 1px solid rgba(79, 142, 255, 0.16);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.75),
+      inset 0 -18px 36px rgba(79, 142, 255, 0.035),
+      0 16px 36px rgba(15, 23, 42, 0.08),
+      0 2px 0 rgba(255, 255, 255, 0.8);
+    transform: translate3d(0, 0, 0);
+  }
+
+  .skills-3d-card > *,
+  .expertise-3d-card > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .skills-3d-card {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    min-height: 138px;
+    border-radius: 24px;
+    padding: 1.4rem;
+  }
+
+  .skills-3d-card::before,
+  .expertise-3d-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(115deg, rgba(255, 255, 255, 0.52), transparent 34%),
+      radial-gradient(circle at 85% 18%, rgba(168, 85, 247, 0.16), transparent 32%);
+    opacity: 0.9;
+    border-radius: inherit;
+  }
+
+  .skills-3d-card::after,
+  .expertise-3d-card::after {
+    content: '';
+    position: absolute;
+    left: 7%;
+    right: 7%;
+    bottom: -34px;
+    height: 42px;
+    z-index: -1;
+    border-radius: 999px;
+    background: radial-gradient(ellipse at center, rgba(15, 23, 42, 0.28), rgba(79, 142, 255, 0.12) 48%, transparent 72%);
+    filter: blur(16px);
+    transform: translateZ(-55px) scale(0.92);
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  .skills-3d-icon {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    width: 3.25rem;
+    height: 3.25rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: 18px;
+    color: #4f8eff;
+    background:
+      radial-gradient(circle at 28% 20%, rgba(255, 255, 255, 0.95), transparent 30%),
+      linear-gradient(145deg, rgba(79, 142, 255, 0.18), rgba(34, 211, 238, 0.08));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.85),
+      0 14px 26px rgba(79, 142, 255, 0.18);
+  }
+
+  .expertise-3d-card {
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    border-radius: 24px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.78),
+      inset 0 -18px 36px rgba(255, 255, 255, 0.24),
+      0 20px 45px rgba(15, 23, 42, 0.07),
+      0 0 0 1px rgba(255, 255, 255, 0.48);
+  }
+
+  .expertise-3d-card::before {
+    background:
+      radial-gradient(circle at 50% 0%, var(--skill-glow), transparent 42%),
+      linear-gradient(145deg, rgba(255, 255, 255, 0.56), transparent 45%);
+  }
+
+  .expertise-3d-card::after {
+    background: radial-gradient(ellipse at center, var(--skill-glow), rgba(15, 23, 42, 0.18) 45%, transparent 72%);
+  }
+
+  .light .skills-3d-card,
+  .light .expertise-3d-card {
+    background:
+      radial-gradient(circle at 18% 0%, rgba(79, 142, 255, 0.14), transparent 35%),
+      linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(247, 249, 255, 0.74));
+  }
+
+  @media (min-width: 768px) {
+    .skills-3d-card,
+    .expertise-3d-card {
+      transform-style: preserve-3d;
+      transition:
+        transform 460ms cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 460ms ease,
+        border-color 460ms ease;
+    }
+
+    .skills-3d-card:hover {
+      transform: translate3d(0, -22px, 72px) rotateX(12deg) rotateY(-10deg) scale(1.045);
+      border-color: rgba(79, 142, 255, 0.34);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        inset 0 -24px 44px rgba(79, 142, 255, 0.055),
+        0 54px 110px rgba(79, 142, 255, 0.24),
+        0 26px 55px rgba(15, 23, 42, 0.18),
+        0 0 0 1px rgba(255, 255, 255, 0.72);
+    }
+
+    .expertise-3d-card:hover,
+    .expertise-3d-card.is-active {
+      transform: translate3d(0, -24px, 84px) rotateX(14deg) rotateY(8deg) scale(1.055);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.82),
+        inset 0 -24px 46px rgba(255, 255, 255, 0.28),
+        0 60px 120px var(--skill-glow),
+        0 26px 58px rgba(15, 23, 42, 0.18),
+        0 0 0 1px rgba(255, 255, 255, 0.74);
+    }
+
+    .skills-3d-card:hover::after,
+    .expertise-3d-card:hover::after,
+    .expertise-3d-card.is-active::after {
+      bottom: -54px;
+      left: -2%;
+      right: -2%;
+      height: 64px;
+      filter: blur(24px);
+      opacity: 0.95;
+      transform: translateZ(-110px) scale(1.08);
+    }
+
+    .skills-3d-card:hover .skills-3d-icon,
+    .expertise-3d-card:hover > div:first-child,
+    .expertise-3d-card.is-active > div:first-child {
+      transform: translateZ(54px) scale(1.12);
+    }
+
+    .skills-3d-icon,
+    .expertise-3d-card > div:first-child {
+      transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+  }
+
+  @media (max-width: 767px) {
+    .skills-3d-stage {
+      perspective: none;
+    }
+
+    .skills-3d-card,
+    .expertise-3d-card {
+      transform: none;
+      background: rgba(255, 255, 255, 0.9);
+      transition:
+        transform 280ms cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 280ms ease,
+        border-color 280ms ease;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        0 10px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .expertise-3d-card {
+      overflow: visible;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .expertise-3d-card.is-active {
+      z-index: 20;
+      transform: translateY(-18px) scale(1.08);
+      border-color: var(--skill-glow);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 34px 70px var(--skill-glow),
+        0 20px 45px rgba(15, 23, 42, 0.16),
+        0 0 0 1px rgba(255, 255, 255, 0.78);
+    }
+
+    .expertise-3d-card.is-active::after {
+      bottom: -40px;
+      left: -8%;
+      right: -8%;
+      height: 54px;
+      opacity: 0.95;
+      filter: blur(22px);
+      transform: scale(1.08);
+    }
+
+    .expertise-3d-card.is-active > div:first-child {
+      transform: scale(1.14);
+    }
+  }
+
   @media (max-width: 767px) {
     .ai-orbit {
       width: 84px;

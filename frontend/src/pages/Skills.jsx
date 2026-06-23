@@ -14,6 +14,7 @@ const EXPERTISE = [
     color: 'from-blue-500/20 to-blue-600/5',
     border: 'border-blue-500/20',
     iconBg: 'bg-blue-500/10 text-blue-400',
+    glow: 'rgba(79, 142, 255, 0.28)',
   },
   {
     label: 'n8n Workflows',
@@ -22,6 +23,7 @@ const EXPERTISE = [
     color: 'from-orange-500/20 to-orange-600/5',
     border: 'border-orange-500/20',
     iconBg: 'bg-orange-500/10 text-orange-400',
+    glow: 'rgba(249, 115, 22, 0.26)',
   },
   {
     label: 'MERN Stack',
@@ -30,6 +32,7 @@ const EXPERTISE = [
     color: 'from-emerald-500/20 to-emerald-600/5',
     border: 'border-emerald-500/20',
     iconBg: 'bg-emerald-500/10 text-emerald-400',
+    glow: 'rgba(16, 185, 129, 0.24)',
   },
   {
     label: 'SaaS Development',
@@ -38,6 +41,7 @@ const EXPERTISE = [
     color: 'from-purple-500/20 to-purple-600/5',
     border: 'border-purple-500/20',
     iconBg: 'bg-purple-500/10 text-purple-400',
+    glow: 'rgba(168, 85, 247, 0.26)',
   },
   {
     label: 'RAG Systems',
@@ -46,6 +50,7 @@ const EXPERTISE = [
     color: 'from-pink-500/20 to-pink-600/5',
     border: 'border-pink-500/20',
     iconBg: 'bg-pink-500/10 text-pink-400',
+    glow: 'rgba(236, 72, 153, 0.24)',
   },
   {
     label: 'Agentic AI',
@@ -54,6 +59,7 @@ const EXPERTISE = [
     color: 'from-cyan-500/20 to-cyan-600/5',
     border: 'border-cyan-500/20',
     iconBg: 'bg-cyan-500/10 text-cyan-400',
+    glow: 'rgba(34, 211, 238, 0.24)',
   },
 ];
 
@@ -98,6 +104,7 @@ const categories = [
 const Skills = () => {
   const { data: skills, loading } = useApi('/api/skills');
   const [activeTab, setActiveTab] = useState('Frontend');
+  const [activeExpertise, setActiveExpertise] = useState(null);
 
   const filteredSkills = skills?.filter(s => s.category === activeTab) || [];
 
@@ -117,16 +124,16 @@ const Skills = () => {
         />
 
         {/* ── Highlight boxes ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-14">
+        <div className="skills-3d-stage grid grid-cols-1 sm:grid-cols-3 gap-4 mb-16">
           {HIGHLIGHTS.map((h, i) => (
             <div
               key={h.title}
-              className="bg-bg-card/60 border border-border-subtle rounded-2xl p-5 flex gap-4 items-start hover:border-accent-blue/25 transition-all group overflow-hidden"
+              className="skills-3d-card group"
             >
-              <div className="w-10 h-10 rounded-xl bg-accent-blue/10 text-accent-blue flex-shrink-0 mt-0.5 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="skills-3d-icon">
                 {h.icon}
               </div>
-              <div>
+              <div className="relative z-10">
                 <h3 className="text-sm font-bold text-text-primary mb-1">{h.title}</h3>
                 <p className="text-xs text-text-muted leading-relaxed">{h.desc}</p>
               </div>
@@ -139,17 +146,30 @@ const Skills = () => {
           <p className="text-xs font-mono text-text-muted uppercase tracking-widest mb-5 text-center">
             Core Expertise
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="skills-3d-stage grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {EXPERTISE.map((e, i) => (
               <div
                 key={e.label}
-                className={`bg-bg-card border ${e.border} rounded-2xl p-4 flex flex-col items-center gap-3 text-center cursor-default transition-all duration-300 hover:-translate-y-1 hover:scale-[1.03] hover:shadow-md transform-gpu will-change-transform`}
+                role="button"
+                tabIndex={0}
+                aria-pressed={activeExpertise === e.label}
+                onClick={() => setActiveExpertise(e.label)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setActiveExpertise(e.label);
+                  }
+                }}
+                className={`expertise-3d-card ${e.border} ${activeExpertise === e.label ? 'is-active' : ''}`}
+                style={{ '--skill-glow': e.glow }}
               >
-                <div className={`w-10 h-10 rounded-xl ${e.iconBg} flex items-center justify-center`}>
+                <div className={`relative z-10 w-11 h-11 rounded-2xl ${e.iconBg} flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]`}>
                   {e.icon}
                 </div>
-                <p className="text-xs font-semibold text-text-primary leading-tight">{e.label}</p>
-                <Stars count={e.stars} />
+                <p className="relative z-10 text-xs font-semibold text-text-primary leading-tight">{e.label}</p>
+                <div className="relative z-10">
+                  <Stars count={e.stars} />
+                </div>
               </div>
             ))}
           </div>
