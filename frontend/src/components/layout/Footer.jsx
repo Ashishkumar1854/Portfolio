@@ -153,7 +153,7 @@ const Footer = () => {
               to="/admin"
               className="hover:text-text-secondary transition-colors"
             >
-              Admin Login
+              admin Login
             </Link>
           </div>
         </div>
