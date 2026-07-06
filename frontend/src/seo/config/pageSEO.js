@@ -267,6 +267,35 @@ export const pageSEO = {
 
     follow: true,
   },
+  journey: {
+    title: "Career Journey | From Student to AI Automation Engineer",
+
+    description:
+      "Follow Ashish Kumar's journey from learning web development to building AI automation systems, SaaS products, hackathon projects, and production-ready software solutions.",
+
+    keywords: [
+      "Career Journey",
+      "Developer Journey",
+      "AI Automation Engineer",
+      "Software Engineer Timeline",
+      "Hackathon",
+      "SaaS Builder",
+      "Developer Roadmap",
+      "Portfolio Journey",
+      "Learning Timeline",
+      "Professional Growth",
+    ],
+
+    path: "/journey",
+
+    canonical: `${seoConfig.site.baseUrl}/journey`,
+
+    ogImage: seoConfig.branding.ogImage,
+
+    index: true,
+
+    follow: true,
+  },
 
   hire: {
     title:
