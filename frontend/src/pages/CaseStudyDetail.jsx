@@ -1,13 +1,14 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Calendar, Clock, Copy, ExternalLink, Eye, MessageCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, Clock, Copy, ExternalLink, Eye, Lock, MessageCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useApi from '../hooks/useApi';
 import SEO from '../seo/components/SEO';
 import seoConfig from '../seo/config/seoConfig';
 import articleSchema from '../seo/schemas/articleSchema';
 import faqSchema from '../seo/schemas/faqSchema';
+import useModuleSettings from '../hooks/useModuleSettings';
 
 const WHATSAPP_LINK = import.meta.env.VITE_COMMUNITY_WHATSAPP_LINK || '#';
 
@@ -32,6 +33,7 @@ const CaseStudyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: cs, loading, error } = useApi(`/api/case-studies/${id}`);
+  const { settings, loading: settingsLoading } = useModuleSettings();
 
   const seoMeta = useMemo(() => {
     if (!cs) return {};
@@ -56,7 +58,7 @@ const CaseStudyDetail = () => {
     };
   }, [cs]);
 
-  if (loading) {
+  if (loading || settingsLoading) {
     return <div className="container max-w-5xl py-24 space-y-6">{[1, 2, 3].map((item) => <div key={item} className="h-40 animate-pulse rounded-2xl bg-bg-card" />)}</div>;
   }
 
@@ -65,6 +67,23 @@ const CaseStudyDetail = () => {
       <div className="container py-24 text-center">
         <h2 className="mb-4 text-2xl font-bold text-text-primary">Case study not found</h2>
         <Link to="/case-studies" className="text-accent-blue hover:underline">Back to Case Studies</Link>
+      </div>
+    );
+  }
+
+  const caseStudyLocked = (settings.lockedCaseStudyIds || []).map(String).includes(String(cs._id));
+
+  if (caseStudyLocked) {
+    return (
+      <div className="container py-24 text-center">
+        <div className="mx-auto max-w-xl rounded-[2rem] border border-border-subtle bg-bg-card p-10 shadow-xl">
+          <Lock size={42} className="mx-auto mb-4 text-accent-blue" />
+          <h2 className="mb-3 font-display text-3xl font-bold text-text-primary">Case study is locked</h2>
+          <p className="mb-6 text-text-secondary">This case study is currently disabled from the admin controller.</p>
+          <Link to="/case-studies" className="inline-flex items-center gap-2 rounded-2xl bg-accent-blue px-6 py-3 font-bold text-white shadow-glow-blue">
+            Back to Case Studies
+          </Link>
+        </div>
       </div>
     );
   }

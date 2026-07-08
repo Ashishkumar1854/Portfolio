@@ -28,6 +28,7 @@ import SEO from '../seo/components/SEO';
 import seoConfig from '../seo/config/seoConfig';
 import resourceSchema from '../seo/schemas/resourceSchema';
 import faqSchema from '../seo/schemas/faqSchema';
+import useModuleSettings from '../hooks/useModuleSettings';
 
 const Section = ({ eyebrow, title, icon, children }) => {
   if (!children) return null;
@@ -53,6 +54,7 @@ const getDescription = (resource) => resource?.excerpt || resource?.description 
 const ResourceDetail = () => {
   const { slug } = useParams();
   const { user } = useContext(AuthContext);
+  const { settings, loading: settingsLoading } = useModuleSettings();
   const navigate = useNavigate();
 
   const [resource, setResource] = useState(null);
@@ -154,7 +156,7 @@ const ResourceDetail = () => {
     }
   };
 
-  if (loading) {
+  if (loading || settingsLoading) {
     return (
       <div className="container max-w-6xl py-24">
         <div className="h-[28rem] animate-pulse rounded-[2rem] bg-bg-card" />
@@ -167,6 +169,23 @@ const ResourceDetail = () => {
       <div className="container py-24 text-center">
         <h2 className="mb-4 text-2xl font-bold text-text-primary">Resource Not Found</h2>
         <Link to="/resources" className="text-accent-blue hover:underline">Back to Resources</Link>
+      </div>
+    );
+  }
+
+  const resourceLocked = (settings.lockedResourceIds || []).map(String).includes(String(resource._id));
+
+  if (resourceLocked) {
+    return (
+      <div className="container py-24 text-center">
+        <div className="mx-auto max-w-xl rounded-[2rem] border border-border-subtle bg-bg-card p-10 shadow-xl">
+          <Lock size={42} className="mx-auto mb-4 text-accent-blue" />
+          <h2 className="mb-3 font-display text-3xl font-bold text-text-primary">Resource is locked</h2>
+          <p className="mb-6 text-text-secondary">This resource is currently disabled from the admin controller.</p>
+          <Link to="/resources" className="inline-flex items-center gap-2 rounded-2xl bg-accent-blue px-6 py-3 font-bold text-white shadow-glow-blue">
+            Back to Resources
+          </Link>
+        </div>
       </div>
     );
   }

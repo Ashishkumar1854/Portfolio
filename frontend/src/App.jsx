@@ -57,6 +57,7 @@ const ManageFAQs = lazy(() => import("./admin/pages/ManageFAQs"));
 const ManageHomeContent = lazy(() => import("./admin/pages/ManageHomeContent"));
 const ManageResources = lazy(() => import("./admin/pages/ManageResources"));
 const ManageUsers = lazy(() => import("./admin/pages/ManageUsers"));
+const ManageSettings = lazy(() => import("./admin/pages/ManageSettings"));
 const ManageNotifications = lazy(
   () => import("./admin/pages/ManageNotifications"),
 );
@@ -249,6 +250,14 @@ const AnimatedRoutes = () => {
             element={
               <Suspense fallback={<AdminLoading />}>
                 <ManageUsers />
+              </Suspense>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <Suspense fallback={<AdminLoading />}>
+                <ManageSettings />
               </Suspense>
             }
           />

@@ -23,6 +23,7 @@ import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
 import SEO from '../seo/components/SEO';
 import seoConfig from '../seo/config/seoConfig';
+import useModuleSettings from '../hooks/useModuleSettings';
 
 const CATEGORIES = [
   'AI Agent Templates',
@@ -87,7 +88,7 @@ const formatDate = (value) => {
 const getThumbnail = (resource) => resource.thumbnail || resource.ogImage || resource.seo?.ogImage || '';
 const getDescription = (resource) => resource.excerpt || resource.description;
 
-const ResourceCard = ({ resource, featured = false }) => {
+const ResourceCard = ({ resource, featured = false, locked = false }) => {
   const theme = getCategoryColor(resource.category);
   const image = getThumbnail(resource);
   const tags = resource.tags?.length ? resource.tags.slice(0, featured ? 5 : 3) : [resource.resourceType || 'Template'];
@@ -99,10 +100,19 @@ const ResourceCard = ({ resource, featured = false }) => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
-      className={`group relative flex h-full flex-col overflow-hidden rounded-[2rem] border border-border-subtle bg-bg-card/90 shadow-[0_20px_70px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-1 hover:border-accent-blue/35 hover:shadow-[0_30px_100px_rgba(79,142,255,0.16)] ${featured ? 'lg:grid lg:grid-cols-[1.05fr_1fr]' : ''}`}
+      className={`group relative flex h-full flex-col overflow-hidden rounded-[2rem] border border-border-subtle bg-bg-card/90 shadow-[0_20px_70px_rgba(15,23,42,0.08)] transition-all duration-300 ${locked ? 'cursor-not-allowed' : 'hover:-translate-y-1 hover:border-accent-blue/35 hover:shadow-[0_30px_100px_rgba(79,142,255,0.16)]'} ${featured ? 'lg:grid lg:grid-cols-[1.05fr_1fr]' : ''}`}
     >
+      {locked && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-bg-primary/35 backdrop-blur-[2px]">
+          <div className="rounded-2xl border border-border-subtle bg-bg-card/95 px-5 py-4 text-center shadow-xl">
+            <Lock size={22} className="mx-auto mb-2 text-accent-blue" />
+            <p className="text-sm font-bold text-text-primary">Resource Locked</p>
+            <p className="text-xs text-text-muted">Disabled from admin controller</p>
+          </div>
+        </div>
+      )}
       <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-      <div className={`relative overflow-hidden border-b border-border-subtle bg-bg-primary/70 ${featured ? 'min-h-72 lg:border-b-0 lg:border-r' : 'aspect-[2.14/1]'}`}>
+      <div className={`relative overflow-hidden border-b border-border-subtle bg-bg-primary/70 ${locked ? 'blur-[1px] grayscale' : ''} ${featured ? 'min-h-72 lg:border-b-0 lg:border-r' : 'aspect-[2.14/1]'}`}>
         {image ? (
           <img
             src={image}
@@ -128,7 +138,7 @@ const ResourceCard = ({ resource, featured = false }) => {
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col p-6 md:p-7">
+      <div className={`flex flex-1 flex-col p-6 md:p-7 ${locked ? 'blur-[1px] grayscale' : ''}`}>
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-mono ${theme}`}>
             {getResourceIcon(resource.category, 13)}
@@ -142,9 +152,15 @@ const ResourceCard = ({ resource, featured = false }) => {
           </span>
         </div>
 
-        <Link to={`/resources/${resource.slug}`} className="mb-3 block font-display text-2xl font-bold leading-tight text-text-primary transition-colors group-hover:text-accent-blue">
-          {resource.title}
-        </Link>
+        {locked ? (
+          <span className="mb-3 block font-display text-2xl font-bold leading-tight text-text-primary">
+            {resource.title}
+          </span>
+        ) : (
+          <Link to={`/resources/${resource.slug}`} className="mb-3 block font-display text-2xl font-bold leading-tight text-text-primary transition-colors group-hover:text-accent-blue">
+            {resource.title}
+          </Link>
+        )}
         <p className="mb-6 line-clamp-3 flex-1 text-[15px] leading-7 text-text-secondary">
           {getDescription(resource)}
         </p>
@@ -177,12 +193,18 @@ const ResourceCard = ({ resource, featured = false }) => {
           <span>{resource.setupTime || resource.resourceType || 'Template'}</span>
         </div>
 
-        <Link
-          to={`/resources/${resource.slug}`}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-accent-blue px-5 py-3 text-sm font-bold text-white shadow-glow-blue transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-500"
-        >
-          View Resource <ArrowRight size={15} />
-        </Link>
+        {locked ? (
+          <button type="button" disabled className="inline-flex cursor-not-allowed items-center justify-center gap-2 rounded-2xl bg-bg-elevated px-5 py-3 text-sm font-bold text-text-muted">
+            <Lock size={15} /> Locked
+          </button>
+        ) : (
+          <Link
+            to={`/resources/${resource.slug}`}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-accent-blue px-5 py-3 text-sm font-bold text-white shadow-glow-blue transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-500"
+          >
+            View Resource <ArrowRight size={15} />
+          </Link>
+        )}
       </div>
     </motion.article>
   );
@@ -190,6 +212,7 @@ const ResourceCard = ({ resource, featured = false }) => {
 
 const Resources = () => {
   const { user } = useContext(AuthContext);
+  const { settings } = useModuleSettings();
   const { categorySlug } = useParams();
   const routeCategory = categoryFromSlug(categorySlug);
   const [search, setSearch] = useState('');
@@ -229,6 +252,8 @@ const Resources = () => {
   const featuredResources = useMemo(() => resources.filter((item) => item.featured).slice(0, 2), [resources]);
   const popularResources = useMemo(() => [...resources].sort((a, b) => (b.views + b.downloads) - (a.views + a.downloads)).slice(0, 3), [resources]);
   const recentResources = useMemo(() => [...resources].sort((a, b) => new Date(b.updatedAtDisplay || b.updatedAt) - new Date(a.updatedAtDisplay || a.updatedAt)).slice(0, 3), [resources]);
+  const lockedResourceIds = useMemo(() => new Set((settings.lockedResourceIds || []).map(String)), [settings.lockedResourceIds]);
+  const isResourceLocked = (resource) => lockedResourceIds.has(String(resource._id));
 
   const seoMeta = {
     title: routeCategory
@@ -352,7 +377,7 @@ const Resources = () => {
                 <Filter size={18} className="text-text-muted" />
               </div>
               <div className="grid grid-cols-1 gap-7">
-                {featuredResources.map((resource) => <ResourceCard key={resource._id} resource={resource} featured />)}
+                {featuredResources.map((resource) => <ResourceCard key={resource._id} resource={resource} featured locked={isResourceLocked(resource)} />)}
               </div>
             </section>
           )}
@@ -370,7 +395,7 @@ const Resources = () => {
               </div>
             ) : resources.length > 0 ? (
               <div className="grid grid-cols-1 gap-7 md:grid-cols-2 xl:grid-cols-3">
-                {resources.map((resource) => <ResourceCard key={resource._id} resource={resource} />)}
+                {resources.map((resource) => <ResourceCard key={resource._id} resource={resource} locked={isResourceLocked(resource)} />)}
               </div>
             ) : (
               <div className="rounded-[2rem] border border-border-subtle bg-bg-card/70 p-14 text-center text-text-muted">
@@ -389,7 +414,7 @@ const Resources = () => {
                   <h2 className="mb-4 font-display text-xl font-bold text-text-primary">{title}</h2>
                   <div className="space-y-3">
                     {items.map((item) => (
-                      <Link key={item._id} to={`/resources/${item.slug}`} className="flex items-center gap-4 rounded-2xl border border-border-subtle bg-bg-primary/55 p-4 transition-all hover:border-accent-blue/35">
+                      <Link key={item._id} to={isResourceLocked(item) ? '#' : `/resources/${item.slug}`} onClick={(event) => isResourceLocked(item) && event.preventDefault()} className={`flex items-center gap-4 rounded-2xl border border-border-subtle bg-bg-primary/55 p-4 transition-all ${isResourceLocked(item) ? 'cursor-not-allowed opacity-60 blur-[1px]' : 'hover:border-accent-blue/35'}`}>
                         <span className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border ${getCategoryColor(item.category)}`}>
                           {getResourceIcon(item.category, 18)}
                         </span>
@@ -397,7 +422,7 @@ const Resources = () => {
                           <span className="block truncate font-semibold text-text-primary">{item.title}</span>
                           <span className="text-xs text-text-muted">{item.downloads || 0} downloads • {formatDate(item.updatedAtDisplay || item.updatedAt)}</span>
                         </span>
-                        <ArrowRight size={15} className="text-text-muted" />
+                        {isResourceLocked(item) ? <Lock size={15} className="text-text-muted" /> : <ArrowRight size={15} className="text-text-muted" />}
                       </Link>
                     ))}
                   </div>

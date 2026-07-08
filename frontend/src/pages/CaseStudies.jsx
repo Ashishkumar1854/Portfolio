@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BarChart3, Clock, Search, Sparkles, X } from 'lucide-react';
+import { ArrowRight, BarChart3, Clock, Lock, Search, Sparkles, X } from 'lucide-react';
 import useApi from '../hooks/useApi';
+import useModuleSettings from '../hooks/useModuleSettings';
 
 const PAGE_SIZE = 6;
 const CATEGORIES = ['All', 'SaaS', 'AI Automation', 'WhatsApp Automation', 'n8n', 'Full Stack', 'Other'];
@@ -11,9 +12,19 @@ const getImage = (item) => item?.coverImage || item?.imageUrl || '';
 const getExcerpt = (item) => item?.excerpt || item?.subtitle || item?.overview || '';
 const casePath = (item) => `/case-studies/${item.slug || item._id}`;
 
-const CaseCard = ({ item, featured = false }) => (
-  <Link to={casePath(item)} className={`group block overflow-hidden rounded-[1.5rem] border border-border-subtle bg-bg-card shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-accent-blue/35 hover:shadow-[0_24px_80px_rgba(59,130,246,0.14)] ${featured ? 'lg:grid lg:grid-cols-[1.08fr_0.92fr]' : ''}`}>
-    <div className={`relative overflow-hidden bg-bg-elevated ${featured ? 'min-h-[18rem]' : 'h-56'}`}>
+const CaseCard = ({ item, featured = false, locked = false }) => {
+  const content = (
+    <div className={`group relative block overflow-hidden rounded-[1.5rem] border border-border-subtle bg-bg-card shadow-card transition-all duration-300 ${locked ? 'cursor-not-allowed' : 'hover:-translate-y-1 hover:border-accent-blue/35 hover:shadow-[0_24px_80px_rgba(59,130,246,0.14)]'} ${featured ? 'lg:grid lg:grid-cols-[1.08fr_0.92fr]' : ''}`}>
+      {locked && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-bg-primary/35 backdrop-blur-[2px]">
+          <div className="rounded-2xl border border-border-subtle bg-bg-card/95 px-5 py-4 text-center shadow-xl">
+            <Lock size={22} className="mx-auto mb-2 text-accent-blue" />
+            <p className="text-sm font-bold text-text-primary">Case Study Locked</p>
+            <p className="text-xs text-text-muted">Disabled from admin controller</p>
+          </div>
+        </div>
+      )}
+    <div className={`relative overflow-hidden bg-bg-elevated ${locked ? 'blur-[1px] grayscale' : ''} ${featured ? 'min-h-[18rem]' : 'h-56'}`}>
       {getImage(item) ? (
         <img src={getImage(item)} alt={item.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
       ) : (
@@ -24,7 +35,7 @@ const CaseCard = ({ item, featured = false }) => (
       <div className="absolute inset-0 bg-gradient-to-t from-bg-primary/70 via-transparent to-transparent opacity-80" />
       {item.featured && <span className="absolute left-4 top-4 rounded-full bg-accent-blue px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white">Featured</span>}
     </div>
-    <div className="flex h-full flex-col p-6 md:p-7">
+    <div className={`flex h-full flex-col p-6 md:p-7 ${locked ? 'blur-[1px] grayscale' : ''}`}>
       <div className="mb-4 flex flex-wrap items-center gap-2 text-xs font-mono text-text-muted">
         {(item.industry || item.category) && <span className="rounded-full border border-border-subtle bg-bg-elevated px-3 py-1">{item.industry || item.category}</span>}
         {item.projectDuration && <span>{item.projectDuration}</span>}
@@ -47,16 +58,21 @@ const CaseCard = ({ item, featured = false }) => (
           <span key={tech} className="rounded-full border border-border-subtle bg-bg-elevated px-3 py-1 text-[11px] font-mono text-text-muted">{tech}</span>
         ))}
       </div>
-      <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-accent-blue">Read case study <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" /></span>
+      <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-accent-blue">{locked ? 'Locked' : 'Read case study'} {locked ? <Lock size={15} /> : <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />}</span>
     </div>
-  </Link>
-);
+    </div>
+  );
+
+  if (locked) return content;
+  return <Link to={casePath(item)}>{content}</Link>;
+};
 
 const CaseStudies = () => {
   const [activeCategory, setActiveCategory] = useState('All');
   const [activeTech, setActiveTech] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
+  const { settings } = useModuleSettings();
 
   const apiUrl = useMemo(() => {
     const params = new URLSearchParams();
@@ -74,6 +90,8 @@ const CaseStudies = () => {
   const latest = (caseStudies || []).filter((item) => item._id !== featured?._id);
   const totalPages = Math.max(1, Math.ceil(latest.length / PAGE_SIZE));
   const paginated = latest.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const lockedCaseStudyIds = useMemo(() => new Set((settings.lockedCaseStudyIds || []).map(String)), [settings.lockedCaseStudyIds]);
+  const isCaseStudyLocked = (item) => lockedCaseStudyIds.has(String(item._id));
 
   const setFilter = (setter, value) => {
     setter(value);
@@ -118,7 +136,7 @@ const CaseStudies = () => {
             {featured && (
               <section className="mb-12">
                 <p className="mb-4 text-xs font-mono uppercase tracking-[0.22em] text-accent-blue">Featured Case Study</p>
-                <CaseCard item={featured} featured />
+                <CaseCard item={featured} featured locked={isCaseStudyLocked(featured)} />
               </section>
             )}
 
@@ -128,7 +146,7 @@ const CaseStudies = () => {
                 <p className="text-sm text-text-muted">{caseStudies.length} result{caseStudies.length === 1 ? '' : 's'}</p>
               </div>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {paginated.map((item) => <CaseCard key={item._id} item={item} />)}
+                {paginated.map((item) => <CaseCard key={item._id} item={item} locked={isCaseStudyLocked(item)} />)}
               </div>
               {totalPages > 1 && (
                 <div className="mt-8 flex justify-center gap-2">
