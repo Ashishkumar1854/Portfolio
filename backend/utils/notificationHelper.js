@@ -137,7 +137,7 @@ export const triggerNewBlogNotification = async (blog) => {
         text: `New Blog Published: "${blog.title}"`,
         title: 'New Blog Post',
         message: `A new blog post has been published: "${blog.title}". Read it now!`,
-        link: `/blog/${blog._id}`,
+        link: `/blog/${blog.slug || blog._id}`,
         blogId: blog._id.toString()
       });
 
@@ -148,10 +148,10 @@ export const triggerNewBlogNotification = async (blog) => {
           <p>Hi ${user.name}, a new article is live on the site.</p>
           <div class="detail-box">
             <div class="detail-title">${blog.title}</div>
-            <div class="detail-text">${blog.subtitle || 'Read my latest thoughts and walkthrough.'}</div>
+            <div class="detail-text">${blog.excerpt || blog.subtitle || 'Read my latest thoughts and walkthrough.'}</div>
           </div>
           <p style="text-align: center;">
-            <a href="${process.env.CLIENT_URL || 'http://localhost:3000'}/blog/${blog._id}" class="btn">Read Blog</a>
+            <a href="${process.env.CLIENT_URL || 'http://localhost:3000'}/blog/${blog.slug || blog._id}" class="btn">Read Blog</a>
           </p>
         `;
         

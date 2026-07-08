@@ -16,10 +16,15 @@ export const searchAll = async (req, res) => {
 
     const [blogs, resources] = await Promise.all([
       Blog.find({
+        published: { $ne: false },
+        status: 'Published',
+        noIndex: { $ne: true },
         $or: [
           { title: regex },
+          { excerpt: regex },
           { subtitle: regex },
-          { content: regex }
+          { content: regex },
+          { tags: regex }
         ]
       }).limit(5),
 

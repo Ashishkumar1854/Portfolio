@@ -28,6 +28,7 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import searchRoutes from './routes/searchRoutes.js';
 import broadcastRoutes from './routes/broadcastRoutes.js';
 import benefitRoutes from './routes/benefitRoutes.js';
+import technicalSeoRoutes from './routes/technicalSeoRoutes.js';
 import { seedDatabase } from './utils/seeder.js';
 import { startEmailWorker } from './utils/emailQueueProcessor.js';
 
@@ -81,6 +82,7 @@ app.use(cors({
 app.use(morgan('dev'));
 
 // Routes
+app.use('/', technicalSeoRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/projects', projectRoutes);

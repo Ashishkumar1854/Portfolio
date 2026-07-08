@@ -27,10 +27,11 @@ export const deleteFromCloudinary = async (imageUrl) => {
   try {
     if (!imageUrl) return;
     
-    // Extract public_id from secure_url
-    const urlParts = imageUrl.split('/');
-    const folderWithFile = urlParts.slice(-3).join('/'); // ashish_portfolio/folderName/filename.jpg
-    const publicId = folderWithFile.split('.')[0]; // remove extension
+    const url = new URL(imageUrl);
+    const parts = url.pathname.split('/').filter(Boolean);
+    const uploadIndex = parts.indexOf('upload');
+    const publicIdParts = parts.slice(uploadIndex + 1).filter((part) => !/^v\d+$/.test(part));
+    const publicId = publicIdParts.join('/').replace(/\.[^/.]+$/, '');
     
     await cloudinary.uploader.destroy(publicId);
   } catch (error) {
