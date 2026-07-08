@@ -146,17 +146,17 @@ const Search = () => {
                           Blog
                         </span>
                         <h3 className="font-bold text-text-primary text-base mt-2 hover:text-accent-purple transition-colors">
-                          <Link to={`/blog/${blog._id}`}>{blog.title}</Link>
+                          <Link to={`/blog/${blog.slug || blog._id}`}>{blog.title}</Link>
                         </h3>
-                        {blog.subtitle && (
+                        {(blog.excerpt || blog.subtitle) && (
                           <p className="text-xs text-text-secondary line-clamp-2 mt-2 leading-relaxed">
-                            {blog.subtitle}
+                            {blog.excerpt || blog.subtitle}
                           </p>
                         )}
                       </div>
                       <div className="flex justify-between items-center text-[10px] text-text-muted mt-5 border-t border-border-subtle/50 pt-3 font-mono">
                         <span>Published {new Date(blog.createdAt).toLocaleDateString()}</span>
-                        <Link to={`/blog/${blog._id}`} className="text-accent-purple flex items-center gap-0.5 font-bold">
+                        <Link to={`/blog/${blog.slug || blog._id}`} className="text-accent-purple flex items-center gap-0.5 font-bold">
                           Read Article <ArrowRight size={10} />
                         </Link>
                       </div>

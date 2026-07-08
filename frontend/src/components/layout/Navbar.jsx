@@ -2,7 +2,8 @@ import React, { useContext, useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, User as UserIcon, Sun, Moon } from 'lucide-react';
+import { Menu, X, Sun, Moon } from 'lucide-react';
+import logoImage from '../../assets/logo.jpeg';
 
 const Navbar = () => {
   const { user } = useContext(AuthContext);
@@ -59,9 +60,16 @@ const Navbar = () => {
         {/* Logo */}
         <Link
           to="/"
-          className="text-xl font-display font-bold text-text-primary tracking-tight hover:opacity-80 transition-opacity"
+          className="flex items-center gap-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-blue/30"
+          aria-label="Ashish home"
         >
-          Ashish
+          <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-border-subtle bg-bg-card shadow-sm transition-all duration-300 hover:border-accent-blue/35 hover:shadow-glow-blue/20">
+            <img
+              src={logoImage}
+              alt="Ashish logo"
+              className="h-full w-full object-cover"
+            />
+          </span>
         </Link>
 
         {/* Desktop Nav */}

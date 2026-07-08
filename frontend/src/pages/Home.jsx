@@ -318,6 +318,14 @@ const Home = () => {
   const featuredProjects = projects
     ? projects.filter((p) => p.featured).slice(0, 3)
     : [];
+  const projectImage = (project) => project.thumbnail || project.imageUrl || project.ogImage;
+  const projectTech = (project) => project.techStack?.length ? project.techStack : project.tech || [];
+  const projectDescription = (project) => project.shortDescription || project.problem || project.overview;
+  const featuredProjectGridClass = featuredProjects.length === 1
+    ? "mx-auto grid max-w-3xl grid-cols-1 gap-8"
+    : featuredProjects.length === 2
+      ? "mx-auto grid max-w-6xl grid-cols-1 md:grid-cols-2 gap-8"
+      : "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 2xl:gap-10";
   const featuredCases = caseStudies
     ? caseStudies.filter((c) => c.featured).slice(0, 3)
     : [];
@@ -922,19 +930,20 @@ const Home = () => {
               initial="hidden"
               whileInView="show"
               viewport={{ once: true }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+              className={featuredProjectGridClass}
             >
               {featuredProjects.map((project) => (
                 <motion.div key={project._id} variants={itemVariants}>
-                  <AnimatedCard className="flex flex-col group overflow-hidden hover:border-accent-blue/30 hover:shadow-card-hover transition-all duration-300 h-full">
-                    <div className="h-48 overflow-hidden relative">
-                      <div className="absolute inset-0 bg-gradient-to-t from-bg-card to-transparent z-10 opacity-60" />
-                      {project.imageUrl ? (
+                  <AnimatedCard className="relative flex flex-col group overflow-hidden rounded-[2rem] border-white/10 bg-bg-card/90 hover:border-accent-blue/40 hover:shadow-[0_28px_90px_rgba(79,142,255,0.18)] transition-all duration-300 ease-out h-full">
+                    <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+                    <div className="p-4 pb-0">
+                      <div className="aspect-[2.14/1] overflow-hidden relative rounded-[1.6rem] border border-border-subtle bg-gradient-to-br from-bg-primary via-bg-elevated/50 to-bg-primary shadow-inner">
+                      {projectImage(project) ? (
                         <img
-                          src={project.imageUrl}
+                          src={projectImage(project)}
                           alt={project.title}
                           loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full object-cover object-center scale-[0.985] group-hover:scale-100 transition-transform duration-300 ease-out"
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-accent-blue/10 to-accent-purple/10 flex items-center justify-center">
@@ -944,29 +953,37 @@ const Home = () => {
                           />
                         </div>
                       )}
+                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                      </div>
                     </div>
-                    <div className="p-6 flex flex-col flex-grow">
-                      <span className="text-xs font-mono text-accent-blue mb-2">
+                    <div className="p-7 pt-6 flex flex-col flex-grow">
+                      <span className="inline-flex w-fit rounded-full border border-accent-blue/25 bg-accent-blue/10 px-3.5 py-1.5 text-[11px] font-mono text-accent-blue mb-4 shadow-sm">
                         {project.category}
                       </span>
-                      <h3 className="text-xl font-display font-bold mb-2 text-text-primary group-hover:text-accent-blue transition-colors duration-300">
-                        {project.title}
-                      </h3>
-                      <p className="text-text-secondary text-sm mb-4 line-clamp-2 flex-grow">
-                        {project.problem}
+                      {project.slug ? (
+                        <Link to={`/projects/${project.slug}`} className="text-2xl md:text-[1.7rem] font-display font-bold mb-3 leading-tight text-text-primary group-hover:text-accent-blue transition-colors duration-300">
+                          {project.title}
+                        </Link>
+                      ) : (
+                        <h3 className="text-2xl md:text-[1.7rem] font-display font-bold mb-3 leading-tight text-text-primary group-hover:text-accent-blue transition-colors duration-300">
+                          {project.title}
+                        </h3>
+                      )}
+                      <p className="text-text-secondary text-[15px] leading-7 mb-7 line-clamp-3 flex-grow">
+                        {projectDescription(project)}
                       </p>
-                      <div className="flex flex-wrap gap-2">
-                        {project.tech.slice(0, 3).map((t) => (
+                      <div className="flex flex-wrap gap-2.5 mt-auto border-t border-border-subtle/70 pt-5">
+                        {projectTech(project).slice(0, 3).map((t) => (
                           <span
                             key={t}
-                            className="text-[10px] font-mono px-2 py-1 bg-bg-elevated border border-border-subtle rounded-md text-text-muted"
+                            className="text-[10px] font-mono px-3 py-1.5 bg-bg-elevated/80 border border-border-subtle rounded-full text-text-muted shadow-sm"
                           >
                             {t}
                           </span>
                         ))}
-                        {project.tech.length > 3 && (
-                          <span className="text-[10px] font-mono px-2 py-1 bg-bg-elevated border border-border-subtle rounded-md text-text-muted">
-                            +{project.tech.length - 3}
+                        {projectTech(project).length > 3 && (
+                          <span className="text-[10px] font-mono px-3 py-1.5 bg-bg-elevated/80 border border-border-subtle rounded-full text-text-muted shadow-sm">
+                            +{projectTech(project).length - 3}
                           </span>
                         )}
                       </div>

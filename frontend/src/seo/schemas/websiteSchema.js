@@ -15,8 +15,9 @@ const websiteSchema = {
   inLanguage: seoConfig.site.language,
 
   publisher: {
-    "@type": "Person",
-    name: seoConfig.author.name,
+    "@type": "Organization",
+    "@id": `${seoConfig.site.baseUrl}/#organization`,
+    name: seoConfig.site.name,
   },
 
   potentialAction: {

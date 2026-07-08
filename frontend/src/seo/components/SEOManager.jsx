@@ -24,6 +24,13 @@ const routeSEOMap = {
   "/hire": "hire",
 };
 
+const pageOwnedSEORoutes = [
+  "/projects/",
+  "/resources/",
+  "/blog/",
+  "/case-studies/",
+];
+
 const SEOManager = () => {
   const { pathname } = useLocation();
 
@@ -32,19 +39,9 @@ const SEOManager = () => {
     return <SEO page={routeSEOMap[pathname]} />;
   }
 
-  // Dynamic Blog
-  if (pathname.startsWith("/blog/")) {
-    return <SEO page="blog" />;
-  }
-
-  // Dynamic Resources
-  if (pathname.startsWith("/resources/")) {
-    return <SEO page="resources" />;
-  }
-
-  // Dynamic Case Studies
-  if (pathname.startsWith("/case-studies/")) {
-    return <SEO page="caseStudies" />;
+  // Dynamic pages render their own item/category SEO.
+  if (pageOwnedSEORoutes.some((route) => pathname.startsWith(route))) {
+    return null;
   }
 
   // Default

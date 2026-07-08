@@ -23,6 +23,7 @@ import About from "./pages/About";
 import Services from "./pages/Services";
 import Skills from "./pages/Skills";
 import Projects from "./pages/Projects";
+import ProjectDetail from "./pages/ProjectDetail";
 import Blog from "./pages/Blog";
 import BlogDetail from "./pages/BlogDetail";
 import CaseStudies from "./pages/CaseStudies";
@@ -84,12 +85,14 @@ const AnimatedRoutes = () => {
         <Route path="/services" element={<Services />} />
         <Route path="/skills" element={<Skills />} />
         <Route path="/projects" element={<Projects />} />
+        <Route path="/projects/:slug" element={<ProjectDetail />} />
         <Route path="/blog" element={<Blog />} />
-        <Route path="/blog/:id" element={<BlogDetail />} />
+        <Route path="/blog/:slug" element={<BlogDetail />} />
         <Route path="/case-studies" element={<CaseStudies />} />
         <Route path="/case-studies/:id" element={<CaseStudyDetail />} />
         <Route path="/journey" element={<Journey />} />
         <Route path="/resources" element={<Resources />} />
+        <Route path="/resources/category/:categorySlug" element={<Resources />} />
         <Route path="/resources/:slug" element={<ResourceDetail />} />
         <Route
           path="/search"

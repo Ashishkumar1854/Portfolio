@@ -1,188 +1,147 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Clock, Calendar, ArrowRight, BookOpen, Search, X } from 'lucide-react';
-import SectionHeading from '../components/ui/SectionHeading';
-import AnimatedCard from '../components/ui/AnimatedCard';
+import { ArrowRight, BookOpen, Calendar, Clock, Search, Tag, X } from 'lucide-react';
 import useApi from '../hooks/useApi';
 
 const CATEGORIES = ['All', 'AI Automation', 'AI Agents', 'n8n', 'SaaS', 'Development', 'System Design', 'Startup Journey'];
+const PAGE_SIZE = 6;
 
 const formatDate = (dateString) =>
-  new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  dateString ? new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Draft';
 
-const readingTime = (html = '') => {
-  const text = html.replace(/<[^>]*>/g, '');
-  const words = text.split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.ceil(words / 200));
-};
+const getImage = (blog) => blog.coverImage || blog.imageUrl || blog.ogImage || '';
+const getExcerpt = (blog) => blog.excerpt || blog.subtitle || '';
+const getHref = (blog) => `/blog/${blog.slug || blog._id}`;
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
-};
+const BlogCard = ({ blog, featured = false }) => (
+  <Link
+    to={getHref(blog)}
+    className={`group block overflow-hidden rounded-[1.75rem] border border-border-subtle bg-bg-card/90 shadow-[0_18px_60px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-1 hover:border-accent-purple/35 hover:shadow-[0_28px_90px_rgba(139,92,246,0.16)] ${featured ? 'md:grid md:grid-cols-[1.1fr_0.9fr]' : ''}`}
+  >
+    <div className={`relative overflow-hidden bg-gradient-to-br from-accent-purple/10 to-accent-blue/10 ${featured ? 'min-h-72' : 'h-56'}`}>
+      {getImage(blog) ? (
+        <img src={getImage(blog)} alt={blog.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center">
+          <BookOpen size={42} className="text-text-muted/30" />
+        </div>
+      )}
+      {blog.featured && (
+        <span className="absolute left-4 top-4 rounded-full border border-accent-purple/30 bg-accent-purple/20 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-accent-purple backdrop-blur">
+          Featured
+        </span>
+      )}
+    </div>
+    <div className="flex h-full flex-col p-6 md:p-8">
+      <div className="mb-4 flex flex-wrap items-center gap-3 text-xs font-mono text-text-muted">
+        {blog.category && <span className="rounded-full border border-border-subtle bg-bg-primary px-3 py-1">{blog.category}</span>}
+        <span className="flex items-center gap-1"><Calendar size={12} /> Published {formatDate(blog.publishedAt || blog.createdAt)}</span>
+        {blog.updatedAt && <span>Updated {formatDate(blog.updatedAt)}</span>}
+        <span className="flex items-center gap-1"><Clock size={12} /> {blog.readingTime || 1} min</span>
+      </div>
+      <h3 className={`${featured ? 'text-3xl' : 'text-xl'} mb-3 font-display font-bold leading-tight text-text-primary transition-colors group-hover:text-accent-purple`}>
+        {blog.title}
+      </h3>
+      <p className="line-clamp-3 flex-grow text-sm leading-7 text-text-secondary">{getExcerpt(blog)}</p>
+      <div className="mt-5 flex flex-wrap gap-2">
+        {(blog.tags || []).slice(0, 3).map((item) => (
+          <span key={item} className="inline-flex items-center gap-1 rounded-full bg-bg-elevated px-3 py-1 text-[11px] font-mono text-text-muted">
+            <Tag size={10} /> {item}
+          </span>
+        ))}
+      </div>
+      <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-accent-purple">
+        Read Article <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+      </span>
+    </div>
+  </Link>
+);
 
 const Blog = () => {
-  const { data: blogs, loading } = useApi('/api/blogs');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [activeTag, setActiveTag] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
 
-  const filtered = useMemo(() => {
-    if (!blogs) return [];
-    let result = activeCategory === 'All' ? blogs : blogs.filter(b => b.category === activeCategory);
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter(b =>
-        b.title.toLowerCase().includes(q) ||
-        b.subtitle?.toLowerCase().includes(q) ||
-        b.category?.toLowerCase().includes(q)
-      );
-    }
-    return result;
-  }, [blogs, activeCategory, searchQuery]);
+  const apiUrl = useMemo(() => {
+    const params = new URLSearchParams();
+    if (activeCategory !== 'All') params.set('category', activeCategory);
+    if (activeTag !== 'All') params.set('tag', activeTag);
+    if (searchQuery.trim()) params.set('search', searchQuery.trim());
+    const query = params.toString();
+    return query ? `/api/blogs?${query}` : '/api/blogs';
+  }, [activeCategory, activeTag, searchQuery]);
+
+  const { data: blogs = [], loading } = useApi(apiUrl);
+
+  const tags = useMemo(() => ['All', ...Array.from(new Set((blogs || []).flatMap((blog) => blog.tags || [])))], [blogs]);
+
+  const featured = (blogs || []).filter((blog) => blog.featured);
+  const latest = (blogs || []).filter((blog) => !blog.featured);
+  const totalPages = Math.max(1, Math.ceil(latest.length / PAGE_SIZE));
+  const paginated = latest.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const setFilter = (setter, value) => {
+    setter(value);
+    setPage(1);
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.35 }}
-      className="pb-24 pt-12 min-h-screen"
-    >
-      <div className="container max-w-6xl">
-        <SectionHeading
-          eyebrow="Writing"
-          heading="Blog & Insights"
-          subtext="Deep dives on AI Automation, n8n, SaaS, and building software that actually matters."
-        />
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.35 }} className="relative min-h-screen overflow-hidden pb-28 pt-14">
+      <div className="absolute inset-x-0 top-0 h-[30rem] bg-gradient-to-b from-accent-purple/7 via-accent-blue/5 to-transparent pointer-events-none" />
+      <div className="container relative max-w-7xl">
+        <section className="mb-10 rounded-[2rem] border border-border-subtle bg-bg-card/80 p-8 shadow-[0_30px_100px_rgba(139,92,246,0.10)] backdrop-blur md:p-12">
+          <span className="mb-5 inline-flex rounded-full border border-accent-purple/25 bg-accent-purple/10 px-4 py-2 text-xs font-mono uppercase tracking-[0.22em] text-accent-purple">Technical Writing</span>
+          <h1 className="max-w-4xl font-display text-4xl font-bold leading-tight text-text-primary md:text-6xl">Practical AI, SaaS, and full-stack engineering notes.</h1>
+          <p className="mt-5 max-w-3xl text-lg leading-8 text-text-secondary">Deep technical articles for hiring teams, founders, developers, and clients evaluating production software thinking.</p>
+        </section>
 
-        {/* Search Bar */}
-        <div className="relative max-w-xl mx-auto mb-8">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search articles by title, topic or category..."
-            className="w-full pl-11 pr-10 py-3 bg-bg-card border border-border-subtle rounded-2xl text-sm text-text-primary placeholder-text-muted outline-none focus:border-accent-blue/60 transition-all"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
-            >
-              <X size={14} />
-            </button>
-          )}
+        <section className="mb-8 rounded-2xl border border-border-subtle bg-bg-card p-4">
+          <label className="relative block">
+            <Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" />
+            <input value={searchQuery} onChange={(e) => setFilter(setSearchQuery, e.target.value)} placeholder="Search articles, topics, tags..." className="w-full rounded-xl border border-border-subtle bg-bg-primary py-3 pl-11 pr-10 text-sm text-text-primary outline-none transition-all focus:border-accent-purple/60" />
+            {searchQuery && <button onClick={() => setFilter(setSearchQuery, '')} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"><X size={15} /></button>}
+          </label>
+        </section>
+
+        <div className="mb-10 space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {CATEGORIES.map((category) => (
+              <button key={category} onClick={() => setFilter(setActiveCategory, category)} className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${activeCategory === category ? 'bg-accent-purple text-white shadow-glow-purple' : 'border border-border-subtle bg-bg-card text-text-secondary hover:border-border-active'}`}>{category}</button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {tags.slice(0, 12).map((tag) => (
+              <button key={tag} onClick={() => setFilter(setActiveTag, tag)} className={`rounded-full px-3 py-1.5 text-xs font-mono transition-all ${activeTag === tag ? 'bg-accent-blue text-white' : 'border border-border-subtle bg-bg-card text-text-muted hover:text-text-primary'}`}>#{tag}</button>
+            ))}
+          </div>
         </div>
-
-        {/* Category filter */}
-        <div className="flex flex-wrap justify-center gap-2 mb-14">
-          {CATEGORIES.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                activeCategory === cat
-                  ? 'bg-accent-blue text-white shadow-glow-blue'
-                  : 'bg-bg-card border border-border-subtle text-text-secondary hover:border-border-active'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        {/* Search result info */}
-        {searchQuery && (
-          <p className="text-center text-xs text-text-muted mb-8">
-            {filtered.length} result{filtered.length !== 1 ? 's' : ''} for &ldquo;{searchQuery}&rdquo;
-          </p>
-        )}
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} className="h-80 bg-bg-card animate-pulse rounded-2xl" />
-            ))}
-          </div>
-        ) : filtered.length > 0 ? (
-          <motion.div
-            key={activeCategory + searchQuery}
-            initial="hidden"
-            animate="show"
-            transition={{ staggerChildren: 0.1 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-          >
-            {filtered.map((blog) => (
-              <motion.div key={blog._id} variants={itemVariants}>
-                <AnimatedCard className="flex flex-col group overflow-hidden h-full">
-                  {/* Image */}
-                  <div className="h-48 overflow-hidden relative bg-gradient-to-br from-accent-blue/10 to-accent-purple/10 flex-shrink-0">
-                    {blog.imageUrl ? (
-                      <>
-                        <div className="absolute inset-0 bg-gradient-to-t from-bg-card/40 to-transparent z-10" />
-                        <img
-                          src={blog.imageUrl}
-                          alt={blog.title}
-                          loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      </>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <BookOpen size={40} className="text-text-muted opacity-20" />
-                      </div>
-                    )}
-                    {blog.category && (
-                      <span className="absolute top-3 left-3 z-20 px-2 py-1 bg-bg-card/80 backdrop-blur-sm border border-border-subtle text-[10px] font-mono text-text-muted rounded-full">
-                        {blog.category}
-                      </span>
-                    )}
-                    {/* Like count badge */}
-                    {blog.likes?.length > 0 && (
-                      <span className="absolute top-3 right-3 z-20 px-2 py-1 bg-bg-card/80 backdrop-blur-sm border border-border-subtle text-[10px] font-mono text-accent-blue rounded-full">
-                        ♥ {blog.likes.length}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="p-6 flex flex-col flex-grow">
-                    <div className="flex items-center gap-4 text-xs font-mono text-text-muted mb-4">
-                      <span className="flex items-center gap-1">
-                        <Calendar size={12} /> {formatDate(blog.createdAt)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock size={12} /> {readingTime(blog.content)} min read
-                      </span>
-                    </div>
-
-                    <h3 className="text-lg font-display font-bold text-text-primary mb-2 group-hover:text-accent-blue transition-colors line-clamp-2">
-                      {blog.title}
-                    </h3>
-                    <p className="text-text-secondary text-sm mb-5 flex-grow line-clamp-3 leading-relaxed">
-                      {blog.subtitle}
-                    </p>
-
-                    <Link
-                      to={`/blog/${blog._id}`}
-                      className="flex items-center gap-2 text-sm font-medium text-accent-blue hover:underline mt-auto"
-                    >
-                      Read Article <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </div>
-                </AnimatedCard>
-              </motion.div>
-            ))}
-          </motion.div>
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">{[1, 2, 3, 4, 5, 6].map((item) => <div key={item} className="h-96 animate-pulse rounded-[1.75rem] bg-bg-card" />)}</div>
+        ) : blogs.length > 0 ? (
+          <>
+            {featured.length > 0 && (
+              <section className="mb-14">
+                <h2 className="mb-5 font-display text-2xl font-bold text-text-primary">Featured Posts</h2>
+                <div className="grid gap-8">{featured.slice(0, 2).map((blog) => <BlogCard key={blog._id} blog={blog} featured />)}</div>
+              </section>
+            )}
+            <section>
+              <h2 className="mb-5 font-display text-2xl font-bold text-text-primary">Latest Posts</h2>
+              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">{paginated.map((blog) => <BlogCard key={blog._id} blog={blog} />)}</div>
+              {totalPages > 1 && (
+                <div className="mt-10 flex justify-center gap-2">
+                  {Array.from({ length: totalPages }).map((_, index) => (
+                    <button key={index} onClick={() => setPage(index + 1)} className={`h-10 w-10 rounded-full text-sm font-bold ${page === index + 1 ? 'bg-accent-purple text-white' : 'border border-border-subtle bg-bg-card text-text-secondary'}`}>{index + 1}</button>
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
         ) : (
-          <div className="text-center text-text-muted py-20 bg-bg-card/50 rounded-2xl border border-border-subtle">
-            {searchQuery
-              ? `No articles found for "${searchQuery}". Try a different keyword.`
-              : activeCategory === 'All'
-              ? 'No articles published yet. Check back soon!'
-              : `No posts in "${activeCategory}" yet.`}
-          </div>
+          <div className="rounded-2xl border border-border-subtle bg-bg-card/70 py-20 text-center text-text-muted">No articles found.</div>
         )}
       </div>
     </motion.div>

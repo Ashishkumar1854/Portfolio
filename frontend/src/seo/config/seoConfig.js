@@ -8,16 +8,23 @@
  * ==========================================================
  */
 
+const siteName = "Ashish Portfolio";
+const shortName = "Ashish";
+const baseUrl = import.meta.env.VITE_SITE_URL || "http://localhost:3000";
+const contactEmail = "ashishkyadav.dev@gmail.com";
+const defaultTitle = "Ashish Kumar | AI Automation Engineer & SaaS Product Builder";
+const defaultDescription =
+  "AI Automation Engineer, SaaS Product Builder, Full Stack Developer, AI Agent Developer, React, Node.js, n8n, WhatsApp Automation, Docker, PostgreSQL and scalable web applications.";
+
 export const seoConfig = {
   // -------------------------------------------------------
   // Website Information
   // -------------------------------------------------------
   site: {
-    name: "Ashish Portfolio",
-    shortName: "Ashish",
+    name: siteName,
+    shortName,
 
-    defaultTitle:
-      "Ashish Kumar | AI Automation Engineer & SaaS Product Builder",
+    defaultTitle,
 
     tagline: "AI Automation Engineer & SaaS Product Builder",
 
@@ -28,7 +35,9 @@ export const seoConfig = {
 
     locale: "en_IN",
 
-    baseUrl: "https://ashishportfolio.aigateway.in",
+    baseUrl,
+
+    contactEmail,
   },
 
   // -------------------------------------------------------
@@ -39,7 +48,7 @@ export const seoConfig = {
 
     role: "AI Automation Engineer",
 
-    email: "ashishkyadav.dev@gmail.com",
+    email: contactEmail,
 
     github: "https://github.com/Ashishkumar1854",
 
@@ -63,10 +72,9 @@ export const seoConfig = {
   // Default SEO
   // -------------------------------------------------------
   defaults: {
-    title: "Ashish Kumar | AI Automation Engineer & SaaS Product Builder",
+    title: defaultTitle,
 
-    description:
-      "AI Automation Engineer, SaaS Product Builder, Full Stack Developer, AI Agent Developer, React, Node.js, n8n, WhatsApp Automation, Docker, PostgreSQL and scalable web applications.",
+    description: defaultDescription,
 
     keywords: [
       "Ashish Kumar",
@@ -92,7 +100,7 @@ export const seoConfig = {
   // Technical SEO
   // -------------------------------------------------------
   technical: {
-    canonical: "https://ashishportfolio.aigateway.in",
+    canonical: baseUrl,
 
     twitterCard: "summary_large_image",
 

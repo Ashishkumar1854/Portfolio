@@ -1,4 +1,5 @@
 import seoConfig from "../config/seoConfig";
+import { absoluteUrl } from "../utils/seoUtils";
 
 const personSchema = {
   "@context": "https://schema.org",
@@ -11,7 +12,7 @@ const personSchema = {
 
   url: seoConfig.site.baseUrl,
 
-  image: `${seoConfig.site.baseUrl}${seoConfig.branding.ogImage}`,
+  image: absoluteUrl(seoConfig.branding.ogImage),
 
   email: seoConfig.author.email,
 
@@ -21,7 +22,8 @@ const personSchema = {
 
   worksFor: {
     "@type": "Organization",
-    name: "AiGateway",
+    "@id": `${seoConfig.site.baseUrl}/#organization`,
+    name: seoConfig.site.name,
   },
 
   knowsAbout: [
