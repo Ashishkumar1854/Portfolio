@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search as SearchIcon, FileText, Download, ArrowRight, CornerDownRight } from 'lucide-react';
+import { Search as SearchIcon, FileText, Download, ArrowRight, BriefcaseBusiness } from 'lucide-react';
 import api from '../services/api';
 import SectionHeading from '../components/ui/SectionHeading';
 import AnimatedCard from '../components/ui/AnimatedCard';
@@ -10,14 +10,14 @@ const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const queryParam = searchParams.get('q') || '';
   const [query, setQuery] = useState(queryParam);
-  const [results, setResults] = useState({ blogs: [], resources: [] });
+  const [results, setResults] = useState({ blogs: [], resources: [], caseStudies: [] });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (queryParam) {
       performSearch(queryParam);
     } else {
-      setResults({ blogs: [], resources: [] });
+      setResults({ blogs: [], resources: [], caseStudies: [] });
     }
   }, [queryParam]);
 
@@ -40,7 +40,7 @@ const Search = () => {
     }
   };
 
-  const totalResults = results.blogs.length + results.resources.length;
+  const totalResults = (results.blogs?.length || 0) + (results.resources?.length || 0) + (results.caseStudies?.length || 0);
 
   return (
     <motion.div
@@ -99,7 +99,7 @@ const Search = () => {
             )}
 
             {/* Resources Section */}
-            {results.resources.length > 0 && (
+            {results.resources?.length > 0 && (
               <div>
                 <h2 className="text-lg font-display font-bold text-text-primary mb-6 flex items-center gap-2">
                   <Download size={18} className="text-accent-cyan" />
@@ -132,7 +132,7 @@ const Search = () => {
             )}
 
             {/* Blogs Section */}
-            {results.blogs.length > 0 && (
+            {results.blogs?.length > 0 && (
               <div>
                 <h2 className="text-lg font-display font-bold text-text-primary mb-6 flex items-center gap-2">
                   <FileText size={18} className="text-accent-purple" />
@@ -158,6 +158,41 @@ const Search = () => {
                         <span>Published {new Date(blog.createdAt).toLocaleDateString()}</span>
                         <Link to={`/blog/${blog.slug || blog._id}`} className="text-accent-purple flex items-center gap-0.5 font-bold">
                           Read Article <ArrowRight size={10} />
+                        </Link>
+                      </div>
+                    </AnimatedCard>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Case Studies Section */}
+            {results.caseStudies?.length > 0 && (
+              <div>
+                <h2 className="text-lg font-display font-bold text-text-primary mb-6 flex items-center gap-2">
+                  <BriefcaseBusiness size={18} className="text-accent-blue" />
+                  Case Studies ({results.caseStudies.length})
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {results.caseStudies.map((item) => (
+                    <AnimatedCard key={item._id} className="p-6 flex flex-col justify-between h-full hover:border-accent-blue/30">
+                      <div>
+                        <span className="text-[10px] bg-accent-blue/10 border border-accent-blue/20 text-accent-blue px-2 py-0.5 rounded font-mono uppercase">
+                          {item.industry || item.category || 'Case Study'}
+                        </span>
+                        <h3 className="font-bold text-text-primary text-base mt-2 hover:text-accent-blue transition-colors">
+                          <Link to={`/case-studies/${item.slug || item._id}`}>{item.title}</Link>
+                        </h3>
+                        {(item.excerpt || item.subtitle || item.overview) && (
+                          <p className="text-xs text-text-secondary line-clamp-2 mt-2 leading-relaxed">
+                            {item.excerpt || item.subtitle || item.overview}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex justify-between items-center text-[10px] text-text-muted mt-5 border-t border-border-subtle/50 pt-3 font-mono">
+                        <span>{item.readingTime || 1} min read</span>
+                        <Link to={`/case-studies/${item.slug || item._id}`} className="text-accent-blue flex items-center gap-0.5 font-bold">
+                          View Study <ArrowRight size={10} />
                         </Link>
                       </div>
                     </AnimatedCard>

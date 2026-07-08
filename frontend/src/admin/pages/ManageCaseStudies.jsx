@@ -1,13 +1,26 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Edit2, Trash2, Image as ImageIcon, X as XIcon } from 'lucide-react';
+import { Edit2, Image as ImageIcon, Plus, Trash2, X as XIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useApi from '../../hooks/useApi';
 import api from '../../services/api';
 
-/* ── List View ── */
+const CATEGORIES = ['SaaS', 'AI Automation', 'WhatsApp Automation', 'n8n', 'Full Stack', 'Other'];
+
+const inputCls = 'w-full rounded-xl border border-border-subtle bg-bg-primary px-4 py-3 text-sm text-text-primary outline-none transition-colors focus:border-accent-blue';
+const labelCls = 'mb-2 block text-sm font-medium text-text-secondary';
+const panelCls = 'rounded-2xl border border-border-subtle bg-bg-card p-6';
+
+const stripHtml = (html = '') => html.replace(/<[^>]*>/g, ' ');
+const readingTime = (value = '') => Math.max(1, Math.ceil(stripHtml(value).split(/\s+/).filter(Boolean).length / 200));
+const slugify = (value = '') => value.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '').replace(/--+/g, '-').replace(/^-+|-+$/g, '');
+const toDateInput = (date) => (date ? new Date(date).toISOString().slice(0, 10) : '');
+
+const toLines = (items = []) => (items || []).join('\n');
+const fromLines = (value = '') => value.split('\n').map((item) => item.trim()).filter(Boolean);
+
 const ManageCaseStudies = () => {
-  const { data: caseStudies, loading } = useApi('/api/case-studies');
+  const { data: caseStudies, loading } = useApi('/api/case-studies/admin/all');
   const [isEditing, setIsEditing] = useState(false);
   const [current, setCurrent] = useState(null);
 
@@ -22,67 +35,68 @@ const ManageCaseStudies = () => {
     }
   };
 
-  const handleEdit = (cs) => { setCurrent(cs); setIsEditing(true); };
-  const handleCreate = () => { setCurrent(null); setIsEditing(true); };
-
-  if (isEditing) return <CaseStudyForm cs={current} onBack={() => setIsEditing(false)} />;
+  if (isEditing) {
+    return <CaseStudyForm caseStudy={current} allCaseStudies={caseStudies || []} onBack={() => setIsEditing(false)} />;
+  }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-display font-bold text-text-primary">Manage Case Studies</h1>
-        <button
-          onClick={handleCreate}
-          className="flex items-center gap-2 bg-accent-cyan hover:bg-cyan-500 text-bg-primary px-4 py-2 rounded-xl transition-all font-semibold"
-        >
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-display text-3xl font-bold text-text-primary">Manage Case Studies</h1>
+          <p className="mt-2 text-sm text-text-secondary">Client stories, SEO metadata, publishing, and project proof.</p>
+        </div>
+        <button onClick={() => { setCurrent(null); setIsEditing(true); }} className="inline-flex items-center gap-2 rounded-xl bg-accent-cyan px-4 py-2 font-semibold text-bg-primary transition-all hover:bg-cyan-500">
           <Plus size={18} /> New Case Study
         </button>
       </div>
 
-      <div className="bg-bg-card border border-border-subtle rounded-2xl overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-border-subtle bg-bg-card">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="bg-bg-elevated border-b border-border-subtle text-text-secondary text-sm">
-                <th className="p-4 font-medium">Image</th>
-                <th className="p-4 font-medium">Title</th>
-                <th className="p-4 font-medium">Category</th>
+              <tr className="border-b border-border-subtle bg-bg-elevated text-sm text-text-secondary">
+                <th className="p-4 font-medium">Case Study</th>
+                <th className="p-4 font-medium">Industry</th>
+                <th className="p-4 font-medium">Status</th>
                 <th className="p-4 font-medium">Featured</th>
-                <th className="p-4 font-medium">Screenshots</th>
-                <th className="p-4 font-medium text-right">Actions</th>
+                <th className="p-4 font-medium">SEO</th>
+                <th className="p-4 text-right font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr><td colSpan="6" className="p-8 text-center text-text-muted">Loading...</td></tr>
-              ) : caseStudies?.length > 0 ? (
-                caseStudies.map((cs) => (
-                  <tr key={cs._id} className="border-b border-border-subtle hover:bg-bg-elevated/50 transition-colors">
+              ) : caseStudies?.length ? (
+                caseStudies.map((item) => (
+                  <tr key={item._id} className="border-b border-border-subtle transition-colors hover:bg-bg-elevated/50">
                     <td className="p-4">
-                      {cs.imageUrl
-                        ? <img src={cs.imageUrl} alt={cs.title} className="w-16 h-12 object-cover rounded bg-bg-secondary" />
-                        : <div className="w-16 h-12 bg-bg-secondary rounded flex items-center justify-center text-text-muted"><ImageIcon size={18} /></div>
-                      }
+                      <div className="flex items-center gap-3">
+                        {item.coverImage || item.imageUrl ? (
+                          <img src={item.coverImage || item.imageUrl} alt={item.title} className="h-12 w-16 rounded-lg object-cover" />
+                        ) : (
+                          <div className="flex h-12 w-16 items-center justify-center rounded-lg bg-bg-secondary text-text-muted"><ImageIcon size={18} /></div>
+                        )}
+                        <div>
+                          <p className="font-medium text-text-primary">{item.title}</p>
+                          <p className="text-xs font-mono text-text-muted">/{item.slug || item._id}</p>
+                        </div>
+                      </div>
                     </td>
-                    <td className="p-4 text-text-primary font-medium">{cs.title}</td>
-                    <td className="p-4 text-text-secondary">{cs.category}</td>
-                    <td className="p-4">
-                      {cs.featured
-                        ? <span className="text-accent-cyan bg-accent-cyan/10 px-2 py-1 rounded text-xs">Yes</span>
-                        : <span className="text-text-muted text-xs">No</span>
-                      }
-                    </td>
-                    <td className="p-4 text-text-secondary text-sm">{cs.screenshots?.length || 0} images</td>
+                    <td className="p-4 text-text-secondary">{item.industry || item.category || '-'}</td>
+                    <td className="p-4"><span className="rounded bg-bg-elevated px-2 py-1 text-xs text-text-secondary">{item.status || 'Published'}</span></td>
+                    <td className="p-4">{item.featured ? <span className="rounded bg-accent-cyan/10 px-2 py-1 text-xs text-accent-cyan">Yes</span> : <span className="text-xs text-text-muted">No</span>}</td>
+                    <td className="p-4 text-xs text-text-muted">{item.noIndex ? 'NoIndex' : item.seoTitle ? 'Custom' : 'Auto'}</td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-3">
-                        <button onClick={() => handleEdit(cs)} className="text-text-muted hover:text-accent-cyan transition-colors"><Edit2 size={18} /></button>
-                        <button onClick={() => handleDelete(cs._id)} className="text-text-muted hover:text-red-500 transition-colors"><Trash2 size={18} /></button>
+                        <button onClick={() => { setCurrent(item); setIsEditing(true); }} className="text-text-muted transition-colors hover:text-accent-cyan"><Edit2 size={18} /></button>
+                        <button onClick={() => handleDelete(item._id)} className="text-text-muted transition-colors hover:text-red-500"><Trash2 size={18} /></button>
                       </div>
                     </td>
                   </tr>
                 ))
               ) : (
-                <tr><td colSpan="6" className="p-8 text-center text-text-muted">No case studies yet. Create your first one!</td></tr>
+                <tr><td colSpan="6" className="p-8 text-center text-text-muted">No case studies yet.</td></tr>
               )}
             </tbody>
           </table>
@@ -92,61 +106,101 @@ const ManageCaseStudies = () => {
   );
 };
 
-/* ── Create / Edit Form ── */
-const CaseStudyForm = ({ cs, onBack }) => {
+const CaseStudyForm = ({ caseStudy, allCaseStudies, onBack }) => {
   const [formData, setFormData] = useState({
-    title: cs?.title || '',
-    subtitle: cs?.subtitle || '',
-    overview: cs?.overview || '',
-    problem: cs?.problem || '',
-    research: cs?.research || '',
-    architecture: cs?.architecture || '',
-    implementation: cs?.implementation || '',
-    results: cs?.results || '',
-    lessonsLearned: cs?.lessonsLearned || '',
-    techStack: cs?.techStack?.join(', ') || '',
-    category: cs?.category || 'Other',
-    featured: cs?.featured || false,
+    title: caseStudy?.title || '',
+    slug: caseStudy?.slug || '',
+    excerpt: caseStudy?.excerpt || caseStudy?.subtitle || '',
+    clientName: caseStudy?.clientName || '',
+    industry: caseStudy?.industry || caseStudy?.category || '',
+    projectDuration: caseStudy?.projectDuration || '',
+    completionDate: toDateInput(caseStudy?.completionDate),
+    category: caseStudy?.category || 'Other',
+    content: caseStudy?.content || '',
+    overview: caseStudy?.overview || '',
+    challenge: caseStudy?.challenge || caseStudy?.problem || '',
+    solution: caseStudy?.solution || caseStudy?.architecture || '',
+    implementation: caseStudy?.implementation || '',
+    results: caseStudy?.results || '',
+    conclusion: caseStudy?.conclusion || caseStudy?.lessonsLearned || '',
+    techStack: toLines(caseStudy?.techStack),
+    status: caseStudy?.status || (caseStudy?.published === false ? 'Draft' : 'Published'),
+    published: caseStudy?.published ?? true,
+    featured: caseStudy?.featured || false,
+    publishedAt: toDateInput(caseStudy?.publishedAt),
+    seoTitle: caseStudy?.seoTitle || '',
+    seoDescription: caseStudy?.seoDescription || '',
+    focusKeyword: caseStudy?.focusKeyword || '',
+    canonicalUrl: caseStudy?.canonicalUrl || '',
+    noIndex: caseStudy?.noIndex || false,
   });
-  const [mainImage, setMainImage] = useState(null);
-  const [screenshots, setScreenshots] = useState([]);
-  const [removingScreenshot, setRemovingScreenshot] = useState(null);
-  const [existingScreenshots, setExistingScreenshots] = useState(cs?.screenshots || []);
+  const [metrics, setMetrics] = useState(caseStudy?.metrics?.length ? caseStudy.metrics : [{ label: '', value: '', description: '' }]);
+  const [faq, setFaq] = useState(caseStudy?.faq?.length ? caseStudy.faq : [{ question: '', answer: '' }]);
+  const [testimonial, setTestimonial] = useState(caseStudy?.testimonial || { clientName: '', designation: '', company: '', quote: '' });
+  const [relatedCaseStudies, setRelatedCaseStudies] = useState((caseStudy?.relatedCaseStudies || []).map((item) => item._id || item));
+  const [coverImage, setCoverImage] = useState(null);
+  const [ogImage, setOgImage] = useState(null);
+  const [clientImage, setClientImage] = useState(null);
+  const [galleryFiles, setGalleryFiles] = useState([]);
+  const [existingGallery, setExistingGallery] = useState(caseStudy?.gallery?.length ? caseStudy.gallery : (caseStudy?.screenshots || []).map((url) => ({ url, caption: '' })));
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  const generatedSlug = formData.slug || slugify(formData.title);
+  const generatedReadingTime = useMemo(() => readingTime([
+    formData.content,
+    formData.overview,
+    formData.challenge,
+    formData.solution,
+    formData.implementation,
+    formData.results,
+    formData.conclusion,
+  ].join(' ')), [formData]);
+
+  const handleChange = (event) => {
+    const { name, value, type, checked } = event.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+      ...(name === 'title' && !caseStudy ? { slug: slugify(value) } : {}),
+      ...(name === 'status' ? { published: value === 'Published' } : {}),
+    }));
   };
 
+  const updateList = (setter, index, value) => setter((items) => items.map((item, itemIndex) => itemIndex === index ? value : item));
+  const removeListItem = (setter, index) => setter((items) => items.filter((_, itemIndex) => itemIndex !== index));
+  const addListItem = (setter, item) => setter((items) => [...items, item]);
+
   const handleRemoveExistingScreenshot = async (url) => {
-    if (!window.confirm('Remove this screenshot?')) return;
+    if (!caseStudy || !window.confirm('Remove this screenshot?')) return;
     try {
-      await api.delete(`/api/case-studies/${cs._id}/screenshot`, { data: { url } });
-      setExistingScreenshots(prev => prev.filter(s => s !== url));
+      await api.delete(`/api/case-studies/${caseStudy._id}/screenshot`, { data: { url } });
+      setExistingGallery((items) => items.filter((item) => item.url !== url));
       toast.success('Screenshot removed');
     } catch {
       toast.error('Failed to remove screenshot');
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setIsSubmitting(true);
     const data = new FormData();
-    Object.entries(formData).forEach(([k, v]) => {
-      if (k === 'techStack') {
-        data.append(k, JSON.stringify(v.split(',').map(t => t.trim()).filter(Boolean)));
-      } else {
-        data.append(k, v);
-      }
-    });
-    if (mainImage) data.append('image', mainImage);
-    screenshots.forEach(file => data.append('screenshots', file));
+
+    Object.entries(formData).forEach(([key, value]) => data.append(key, value));
+    data.set('techStack', JSON.stringify(fromLines(formData.techStack)));
+    data.set('metrics', JSON.stringify(metrics.filter((item) => item.label.trim() || item.value.trim())));
+    data.set('faq', JSON.stringify(faq.filter((item) => item.question.trim() && item.answer.trim())));
+    data.set('testimonial', JSON.stringify(testimonial));
+    data.set('gallery', JSON.stringify(existingGallery.filter((item) => item.url)));
+    data.set('relatedCaseStudies', JSON.stringify(relatedCaseStudies.filter(Boolean)));
+    if (coverImage) data.append('coverImage', coverImage);
+    if (ogImage) data.append('ogImage', ogImage);
+    if (clientImage) data.append('clientImage', clientImage);
+    galleryFiles.forEach((file) => data.append('screenshots', file));
 
     try {
-      if (cs) {
-        await api.put(`/api/case-studies/${cs._id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+      if (caseStudy) {
+        await api.put(`/api/case-studies/${caseStudy._id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
         toast.success('Case study updated');
       } else {
         await api.post('/api/case-studies', data, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -160,116 +214,196 @@ const CaseStudyForm = ({ cs, onBack }) => {
     }
   };
 
-  const inputCls = "w-full bg-bg-primary border border-border-subtle rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent-blue transition-colors text-sm";
-  const labelCls = "block text-sm text-text-secondary mb-2";
+  const Field = ({ label, name, as = 'input', rows = 3, ...props }) => (
+    <div>
+      <label className={labelCls}>{label}</label>
+      {as === 'textarea' ? (
+        <textarea name={name} rows={rows} value={formData[name]} onChange={handleChange} className={`${inputCls} resize-y`} {...props} />
+      ) : (
+        <input name={name} value={formData[name]} onChange={handleChange} className={inputCls} {...props} />
+      )}
+    </div>
+  );
 
   return (
-    <div className="bg-bg-card border border-border-subtle rounded-2xl p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-2xl font-bold text-text-primary">{cs ? 'Edit Case Study' : 'Create Case Study'}</h2>
-        <button onClick={onBack} className="text-text-secondary hover:text-text-primary text-sm">Cancel</button>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="font-display text-2xl font-bold text-text-primary">{caseStudy ? 'Edit Case Study' : 'Create Case Study'}</h2>
+          <p className="mt-1 text-sm text-text-secondary">Auto slug: /case-studies/{generatedSlug || 'case-study'} · Reading time: {generatedReadingTime} min</p>
+        </div>
+        <button onClick={onBack} className="text-sm text-text-secondary hover:text-text-primary">Cancel</button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic info */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className={labelCls}>Title *</label>
-            <input type="text" name="title" value={formData.title} onChange={handleChange} className={inputCls} required />
+        <section className={panelCls}>
+          <h3 className="mb-5 font-display text-xl font-bold text-text-primary">Basic Information</h3>
+          <div className="grid gap-5 md:grid-cols-2">
+            <Field label="Title *" name="title" required />
+            <Field label="Slug" name="slug" placeholder="auto-generated-if-empty" />
+            <Field label="Client Name" name="clientName" />
+            <Field label="Industry" name="industry" placeholder="SaaS, Healthcare, Education..." />
+            <Field label="Project Duration" name="projectDuration" placeholder="8 weeks" />
+            <Field label="Completion Date" name="completionDate" type="date" />
+            <div>
+              <label className={labelCls}>Category</label>
+              <select name="category" value={formData.category} onChange={handleChange} className={inputCls}>
+                {CATEGORIES.map((category) => <option key={category} value={category}>{category}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Status</label>
+              <select name="status" value={formData.status} onChange={handleChange} className={inputCls}>
+                {['Published', 'Draft', 'Archived'].map((status) => <option key={status} value={status}>{status}</option>)}
+              </select>
+            </div>
           </div>
+          <div className="mt-5">
+            <Field label="Excerpt" name="excerpt" as="textarea" rows={2} />
+          </div>
+        </section>
+
+        <section className={panelCls}>
+          <h3 className="mb-5 font-display text-xl font-bold text-text-primary">Content Editor</h3>
+          <div className="space-y-5">
+            <Field label="Long-form Content (supports HTML headings for TOC)" name="content" as="textarea" rows={10} />
+            <Field label="Overview" name="overview" as="textarea" rows={4} />
+            <Field label="Challenge" name="challenge" as="textarea" rows={4} />
+            <Field label="Solution" name="solution" as="textarea" rows={4} />
+            <Field label="Implementation" name="implementation" as="textarea" rows={4} />
+            <Field label="Results" name="results" as="textarea" rows={4} />
+            <Field label="Conclusion" name="conclusion" as="textarea" rows={4} />
+          </div>
+        </section>
+
+        <section className={panelCls}>
+          <h3 className="mb-5 font-display text-xl font-bold text-text-primary">Media</h3>
+          <div className="grid gap-5 md:grid-cols-3">
+            <div>
+              <label className={labelCls}>Cover Image</label>
+              {(caseStudy?.coverImage || caseStudy?.imageUrl) && <img src={caseStudy.coverImage || caseStudy.imageUrl} alt="Current cover" className="mb-3 h-24 rounded-xl object-cover" />}
+              <input type="file" accept="image/*" onChange={(event) => setCoverImage(event.target.files[0])} className="w-full text-sm text-text-secondary file:mr-4 file:rounded-lg file:border-0 file:bg-accent-cyan/10 file:px-4 file:py-2 file:font-semibold file:text-accent-cyan" />
+            </div>
+            <div>
+              <label className={labelCls}>OG Image</label>
+              {caseStudy?.ogImage && <img src={caseStudy.ogImage} alt="Current OG" className="mb-3 h-24 rounded-xl object-cover" />}
+              <input type="file" accept="image/*" onChange={(event) => setOgImage(event.target.files[0])} className="w-full text-sm text-text-secondary file:mr-4 file:rounded-lg file:border-0 file:bg-accent-blue/10 file:px-4 file:py-2 file:font-semibold file:text-accent-blue" />
+            </div>
+            <div>
+              <label className={labelCls}>Client Image</label>
+              {caseStudy?.testimonial?.clientImage && <img src={caseStudy.testimonial.clientImage} alt="Client" className="mb-3 h-24 rounded-xl object-cover" />}
+              <input type="file" accept="image/*" onChange={(event) => setClientImage(event.target.files[0])} className="w-full text-sm text-text-secondary file:mr-4 file:rounded-lg file:border-0 file:bg-accent-purple/10 file:px-4 file:py-2 file:font-semibold file:text-accent-purple" />
+            </div>
+          </div>
+          <div className="mt-6">
+            <label className={labelCls}>Gallery</label>
+            {existingGallery.length > 0 && (
+              <div className="mb-4 grid gap-3 md:grid-cols-3">
+                {existingGallery.map((item, index) => (
+                  <div key={item.url || index} className="relative rounded-xl border border-border-subtle bg-bg-primary p-2">
+                    {item.url && <img src={item.url} alt={`Gallery ${index + 1}`} className="mb-2 h-24 w-full rounded-lg object-cover" />}
+                    <input value={item.caption || ''} onChange={(event) => updateList(setExistingGallery, index, { ...item, caption: event.target.value })} className={inputCls} placeholder="Caption" />
+                    {item.url && <button type="button" onClick={() => handleRemoveExistingScreenshot(item.url)} className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white"><XIcon size={12} /></button>}
+                  </div>
+                ))}
+              </div>
+            )}
+            <input type="file" multiple accept="image/*" onChange={(event) => setGalleryFiles(Array.from(event.target.files))} className="w-full text-sm text-text-secondary file:mr-4 file:rounded-lg file:border-0 file:bg-accent-blue/10 file:px-4 file:py-2 file:font-semibold file:text-accent-blue" />
+          </div>
+        </section>
+
+        <section className={panelCls}>
+          <h3 className="mb-5 font-display text-xl font-bold text-text-primary">Project Information</h3>
           <div>
-            <label className={labelCls}>Category</label>
-            <select name="category" value={formData.category} onChange={handleChange} className={inputCls}>
-              {['SaaS', 'AI Automation', 'WhatsApp Automation', 'n8n', 'Full Stack', 'Other'].map(c => (
-                <option key={c} value={c}>{c}</option>
+            <label className={labelCls}>Technology Stack (one per line)</label>
+            <textarea name="techStack" value={formData.techStack} onChange={handleChange} rows={5} className={`${inputCls} resize-y`} />
+          </div>
+          <div className="mt-6 space-y-3">
+            <div className="flex items-center justify-between">
+              <label className={labelCls}>Metrics</label>
+              <button type="button" onClick={() => addListItem(setMetrics, { label: '', value: '', description: '' })} className="text-sm text-accent-cyan">+ Add Metric</button>
+            </div>
+            {metrics.map((metric, index) => (
+              <div key={index} className="grid gap-3 rounded-xl border border-border-subtle bg-bg-primary p-4 md:grid-cols-[1fr_1fr_2fr_auto]">
+                <input value={metric.label} onChange={(event) => updateList(setMetrics, index, { ...metric, label: event.target.value })} className={inputCls} placeholder="Increase Conversion" />
+                <input value={metric.value} onChange={(event) => updateList(setMetrics, index, { ...metric, value: event.target.value })} className={inputCls} placeholder="+180%" />
+                <input value={metric.description || ''} onChange={(event) => updateList(setMetrics, index, { ...metric, description: event.target.value })} className={inputCls} placeholder="Short context" />
+                <button type="button" onClick={() => removeListItem(setMetrics, index)} className="text-text-muted hover:text-red-500"><Trash2 size={18} /></button>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className={panelCls}>
+          <h3 className="mb-5 font-display text-xl font-bold text-text-primary">Testimonial</h3>
+          <div className="grid gap-5 md:grid-cols-3">
+            {['clientName', 'designation', 'company'].map((field) => (
+              <input key={field} value={testimonial[field] || ''} onChange={(event) => setTestimonial((prev) => ({ ...prev, [field]: event.target.value }))} className={inputCls} placeholder={field.replace(/([A-Z])/g, ' $1')} />
+            ))}
+          </div>
+          <textarea value={testimonial.quote || ''} onChange={(event) => setTestimonial((prev) => ({ ...prev, quote: event.target.value }))} rows={4} className={`${inputCls} mt-5 resize-y`} placeholder="Client quote" />
+        </section>
+
+        <section className={panelCls}>
+          <h3 className="mb-5 font-display text-xl font-bold text-text-primary">SEO</h3>
+          <div className="grid gap-5 md:grid-cols-2">
+            <Field label="Meta Title" name="seoTitle" />
+            <Field label="Focus Keyword" name="focusKeyword" />
+            <Field label="Canonical URL" name="canonicalUrl" />
+            <label className="flex items-center gap-3 pt-8 text-sm text-text-secondary">
+              <input type="checkbox" name="noIndex" checked={formData.noIndex} onChange={handleChange} /> NoIndex
+            </label>
+          </div>
+          <div className="mt-5">
+            <Field label="Meta Description" name="seoDescription" as="textarea" rows={3} />
+          </div>
+          <div className="mt-5 rounded-xl border border-border-subtle bg-bg-primary p-4">
+            <p className="text-sm font-semibold text-text-primary">{formData.seoTitle || `${formData.title || 'Case Study'} | Case Study`}</p>
+            <p className="mt-1 text-xs text-accent-blue">/case-studies/{generatedSlug}</p>
+            <p className="mt-2 text-sm text-text-secondary">{formData.seoDescription || formData.excerpt || 'SEO description preview...'}</p>
+          </div>
+        </section>
+
+        <section className={panelCls}>
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="font-display text-xl font-bold text-text-primary">FAQ</h3>
+            <button type="button" onClick={() => addListItem(setFaq, { question: '', answer: '' })} className="text-sm text-accent-cyan">+ Add FAQ</button>
+          </div>
+          <div className="space-y-3">
+            {faq.map((item, index) => (
+              <div key={index} className="rounded-xl border border-border-subtle bg-bg-primary p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="text-sm text-text-secondary">FAQ {index + 1}</span>
+                  <button type="button" onClick={() => removeListItem(setFaq, index)} className="text-text-muted hover:text-red-500"><Trash2 size={16} /></button>
+                </div>
+                <input value={item.question} onChange={(event) => updateList(setFaq, index, { ...item, question: event.target.value })} className={inputCls} placeholder="Question" />
+                <textarea value={item.answer} onChange={(event) => updateList(setFaq, index, { ...item, answer: event.target.value })} rows={3} className={`${inputCls} mt-3 resize-y`} placeholder="Answer" />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className={panelCls}>
+          <h3 className="mb-5 font-display text-xl font-bold text-text-primary">Publishing</h3>
+          <div className="grid gap-5 md:grid-cols-2">
+            <Field label="Published Date" name="publishedAt" type="date" />
+            <label className="flex items-center gap-3 pt-8 text-sm text-text-secondary">
+              <input type="checkbox" name="featured" checked={formData.featured} onChange={handleChange} /> Featured Case Study
+            </label>
+          </div>
+          <div className="mt-5">
+            <label className={labelCls}>Related Case Studies (manual override)</label>
+            <select multiple value={relatedCaseStudies} onChange={(event) => setRelatedCaseStudies(Array.from(event.target.selectedOptions).map((option) => option.value))} className={`${inputCls} min-h-32`}>
+              {(allCaseStudies || []).filter((item) => item._id !== caseStudy?._id).map((item) => (
+                <option key={item._id} value={item._id}>{item.title}</option>
               ))}
             </select>
+            <p className="mt-2 text-xs text-text-muted">Leave empty to use automatic industry + technology related studies.</p>
           </div>
-        </div>
+        </section>
 
-        <div>
-          <label className={labelCls}>Subtitle / Short Description</label>
-          <textarea name="subtitle" value={formData.subtitle} onChange={handleChange} rows={2} className={`${inputCls} resize-none`} />
-        </div>
-
-        {/* Text sections */}
-        {[
-          { name: 'overview', label: 'Overview' },
-          { name: 'problem', label: 'Problem' },
-          { name: 'research', label: 'Research' },
-          { name: 'architecture', label: 'Architecture' },
-          { name: 'implementation', label: 'Implementation' },
-          { name: 'results', label: 'Results' },
-          { name: 'lessonsLearned', label: 'Lessons Learned' },
-        ].map(field => (
-          <div key={field.name}>
-            <label className={labelCls}>{field.label}</label>
-            <textarea name={field.name} value={formData[field.name]} onChange={handleChange} rows={4} className={`${inputCls} resize-y`} />
-          </div>
-        ))}
-
-        <div>
-          <label className={labelCls}>Tech Stack (comma separated)</label>
-          <input type="text" name="techStack" value={formData.techStack} onChange={handleChange} className={inputCls} placeholder="React, Node.js, PostgreSQL, n8n" />
-        </div>
-
-        {/* Featured */}
-        <div className="flex items-center gap-3">
-          <input type="checkbox" id="featured" name="featured" checked={formData.featured} onChange={handleChange} className="w-4 h-4" />
-          <label htmlFor="featured" className="text-sm text-text-secondary">Featured Case Study (shows on homepage)</label>
-        </div>
-
-        {/* Main image */}
-        <div>
-          <label className={labelCls}>Main Image {cs && '(leave empty to keep current)'}</label>
-          {cs?.imageUrl && (
-            <div className="mb-3">
-              <img src={cs.imageUrl} alt="Current" className="h-20 rounded-lg border border-border-subtle object-cover" />
-              <p className="text-xs text-text-muted mt-1 font-mono break-all">{cs.imageUrl}</p>
-            </div>
-          )}
-          <input type="file" onChange={e => setMainImage(e.target.files[0])} accept="image/*" className="w-full text-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent-cyan/10 file:text-accent-cyan hover:file:bg-accent-cyan/20" />
-        </div>
-
-        {/* Screenshots */}
-        <div>
-          <label className={labelCls}>Screenshots (multiple images, added to gallery)</label>
-          {existingScreenshots.length > 0 && (
-            <div className="flex flex-wrap gap-3 mb-3">
-              {existingScreenshots.map((url, i) => (
-                <div key={i} className="relative group">
-                  <img src={url} alt={`Screenshot ${i + 1}`} className="w-24 h-16 rounded-lg object-cover border border-border-subtle" />
-                  {cs && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveExistingScreenshot(url)}
-                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 rounded-full text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <XIcon size={10} />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-          <input
-            type="file"
-            multiple
-            onChange={e => setScreenshots(Array.from(e.target.files))}
-            accept="image/*"
-            className="w-full text-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent-blue/10 file:text-accent-blue hover:file:bg-accent-blue/20"
-          />
-          {screenshots.length > 0 && (
-            <p className="text-xs text-text-muted mt-1">{screenshots.length} new screenshot(s) selected</p>
-          )}
-        </div>
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="bg-accent-cyan hover:bg-cyan-500 text-bg-primary px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50 mt-4"
-        >
-          {isSubmitting ? 'Saving...' : cs ? 'Update Case Study' : 'Create Case Study'}
+        <button type="submit" disabled={isSubmitting} className="rounded-xl bg-accent-cyan px-8 py-3 font-bold text-bg-primary transition-all hover:bg-cyan-500 disabled:opacity-50">
+          {isSubmitting ? 'Saving...' : caseStudy ? 'Update Case Study' : 'Create Case Study'}
         </button>
       </form>
     </div>

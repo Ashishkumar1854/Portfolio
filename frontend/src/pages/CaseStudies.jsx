@@ -1,203 +1,156 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Bot, Layers, Workflow, MessageCircle, Globe, Zap } from 'lucide-react';
-import SectionHeading from '../components/ui/SectionHeading';
-import AnimatedCard from '../components/ui/AnimatedCard';
+import { ArrowRight, BarChart3, Clock, Search, Sparkles, X } from 'lucide-react';
 import useApi from '../hooks/useApi';
 
-const CATEGORIES = ['All', 'SaaS', 'AI Automation', 'WhatsApp Automation', 'n8n', 'Full Stack'];
+const PAGE_SIZE = 6;
+const CATEGORIES = ['All', 'SaaS', 'AI Automation', 'WhatsApp Automation', 'n8n', 'Full Stack', 'Other'];
 
-const catIcon = (cat) => {
-  const map = {
-    SaaS: <Layers size={14} />,
-    'AI Automation': <Bot size={14} />,
-    'WhatsApp Automation': <MessageCircle size={14} />,
-    'n8n': <Workflow size={14} />,
-    'Full Stack': <Globe size={14} />,
-    Other: <Zap size={14} />,
-  };
-  return map[cat] || <Zap size={14} />;
-};
+const getImage = (item) => item?.coverImage || item?.imageUrl || '';
+const getExcerpt = (item) => item?.excerpt || item?.subtitle || item?.overview || '';
+const casePath = (item) => `/case-studies/${item.slug || item._id}`;
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
-};
-
-/* ── fallback placeholder data shown before API has real data ── */
-const FALLBACK_CASES = [
-  {
-    _id: 'ph-1',
-    title: 'Phoneo SaaS Platform',
-    subtitle: 'A full-featured SaaS platform with auth, billing, multi-tenancy, and real-time analytics dashboard.',
-    category: 'SaaS',
-    featured: true,
-    techStack: ['Next.js', 'PostgreSQL', 'Stripe', 'Redis'],
-    imageUrl: '',
-    results: '200% faster user onboarding, ₹0 to ₹50k MRR in 3 months.',
-  },
-  {
-    _id: 'ph-2',
-    title: 'AI Email Automation',
-    subtitle: 'GPT-4 powered email drafting, scheduling, and follow-up automation using n8n and Gmail API.',
-    category: 'AI Automation',
-    featured: true,
-    techStack: ['n8n', 'OpenAI GPT-4', 'Gmail API', 'Airtable'],
-    imageUrl: '',
-    results: 'Saved 20+ hours/week of manual email work per team.',
-  },
-  {
-    _id: 'ph-3',
-    title: 'WhatsApp Customer Bot',
-    subtitle: 'WhatsApp Business API chatbot for order tracking, customer support, and automated follow-ups.',
-    category: 'WhatsApp Automation',
-    featured: false,
-    techStack: ['WhatsApp API', 'Node.js', 'MongoDB', 'Meta Cloud API'],
-    imageUrl: '',
-    results: '70% reduction in customer support queries, 24/7 availability.',
-  },
-  {
-    _id: 'ph-4',
-    title: 'Instagram Lead Automation',
-    subtitle: 'Automated Instagram DM responses and lead qualification pipeline using n8n workflows.',
-    category: 'n8n',
-    featured: false,
-    techStack: ['n8n', 'Instagram API', 'PostgreSQL', 'Resend'],
-    imageUrl: '',
-    results: '300+ leads/month automatically captured and qualified.',
-  },
-];
-
-const CaseStudies = () => {
-  const { data: caseStudies, loading } = useApi('/api/case-studies');
-  const [activeCategory, setActiveCategory] = useState('All');
-
-  const data = (!loading && caseStudies && caseStudies.length > 0) ? caseStudies : FALLBACK_CASES;
-  const filtered = activeCategory === 'All' ? data : data.filter(cs => cs.category === activeCategory);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.35 }}
-      className="pb-24 pt-12"
-    >
-      <div className="container">
-        <SectionHeading
-          eyebrow="Business Impact"
-          heading="Case Studies"
-          subtext="Real client problems, engineered solutions, and measurable results."
-        />
-
-        {/* Category filter */}
-        <div className="flex flex-wrap justify-center gap-3 mb-16">
-          {CATEGORIES.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                activeCategory === cat
-                  ? 'bg-accent-blue text-white shadow-glow-blue'
-                  : 'bg-bg-card border border-border-subtle text-text-secondary hover:border-border-active'
-              }`}
-            >
-              {cat !== 'All' && <span>{catIcon(cat)}</span>}
-              {cat}
-            </button>
+const CaseCard = ({ item, featured = false }) => (
+  <Link to={casePath(item)} className={`group block overflow-hidden rounded-[1.5rem] border border-border-subtle bg-bg-card shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-accent-blue/35 hover:shadow-[0_24px_80px_rgba(59,130,246,0.14)] ${featured ? 'lg:grid lg:grid-cols-[1.08fr_0.92fr]' : ''}`}>
+    <div className={`relative overflow-hidden bg-bg-elevated ${featured ? 'min-h-[18rem]' : 'h-56'}`}>
+      {getImage(item) ? (
+        <img src={getImage(item)} alt={item.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-accent-blue/10 via-bg-elevated to-accent-purple/10">
+          <BarChart3 size={44} className="text-text-muted/30" />
+        </div>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-bg-primary/70 via-transparent to-transparent opacity-80" />
+      {item.featured && <span className="absolute left-4 top-4 rounded-full bg-accent-blue px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white">Featured</span>}
+    </div>
+    <div className="flex h-full flex-col p-6 md:p-7">
+      <div className="mb-4 flex flex-wrap items-center gap-2 text-xs font-mono text-text-muted">
+        {(item.industry || item.category) && <span className="rounded-full border border-border-subtle bg-bg-elevated px-3 py-1">{item.industry || item.category}</span>}
+        {item.projectDuration && <span>{item.projectDuration}</span>}
+        <span className="inline-flex items-center gap-1"><Clock size={12} /> {item.readingTime || 1} min</span>
+      </div>
+      <h2 className={`${featured ? 'text-3xl' : 'text-xl'} font-display font-bold leading-tight text-text-primary`}>{item.title}</h2>
+      {getExcerpt(item) && <p className="mt-4 line-clamp-3 leading-7 text-text-secondary">{getExcerpt(item)}</p>}
+      {item.metrics?.length > 0 && (
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          {item.metrics.slice(0, 2).map((metric, index) => (
+            <div key={index} className="rounded-xl border border-border-subtle bg-bg-elevated p-3">
+              <p className="text-lg font-bold text-accent-blue">{metric.value}</p>
+              <p className="text-xs text-text-muted">{metric.label}</p>
+            </div>
           ))}
         </div>
+      )}
+      <div className="mt-5 flex flex-wrap gap-2">
+        {(item.techStack || []).slice(0, 4).map((tech) => (
+          <span key={tech} className="rounded-full border border-border-subtle bg-bg-elevated px-3 py-1 text-[11px] font-mono text-text-muted">{tech}</span>
+        ))}
+      </div>
+      <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-accent-blue">Read case study <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" /></span>
+    </div>
+  </Link>
+);
 
-        {/* Grid */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {[1, 2, 3, 4].map(i => <div key={i} className="h-80 bg-bg-card animate-pulse rounded-2xl" />)}
+const CaseStudies = () => {
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [activeTech, setActiveTech] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+
+  const apiUrl = useMemo(() => {
+    const params = new URLSearchParams();
+    if (activeCategory !== 'All') params.set('industry', activeCategory);
+    if (activeTech !== 'All') params.set('technology', activeTech);
+    if (searchQuery.trim()) params.set('search', searchQuery.trim());
+    const query = params.toString();
+    return query ? `/api/case-studies?${query}` : '/api/case-studies';
+  }, [activeCategory, activeTech, searchQuery]);
+
+  const { data: caseStudies = [], loading } = useApi(apiUrl);
+
+  const technologyOptions = useMemo(() => ['All', ...Array.from(new Set((caseStudies || []).flatMap((item) => item.techStack || [])))], [caseStudies]);
+  const featured = (caseStudies || []).find((item) => item.featured);
+  const latest = (caseStudies || []).filter((item) => item._id !== featured?._id);
+  const totalPages = Math.max(1, Math.ceil(latest.length / PAGE_SIZE));
+  const paginated = latest.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const setFilter = (setter, value) => {
+    setter(value);
+    setPage(1);
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.35 }} className="relative min-h-screen overflow-hidden pb-28 pt-14">
+      <div className="absolute inset-x-0 top-0 h-[30rem] bg-gradient-to-b from-accent-blue/8 via-accent-purple/5 to-transparent pointer-events-none" />
+      <div className="container relative max-w-7xl">
+        <section className="mb-10 rounded-[2rem] border border-border-subtle bg-bg-card/80 p-8 shadow-[0_30px_100px_rgba(59,130,246,0.10)] backdrop-blur md:p-12">
+          <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-accent-blue/25 bg-accent-blue/10 px-4 py-2 text-xs font-mono uppercase tracking-[0.22em] text-accent-blue"><Sparkles size={14} /> Case Studies</span>
+          <h1 className="max-w-4xl font-display text-4xl font-bold leading-tight text-text-primary md:text-6xl">Proof-backed software, automation, and SaaS execution.</h1>
+          <p className="mt-5 max-w-3xl text-lg leading-8 text-text-secondary">Detailed client and product case studies showing the problem, implementation, metrics, and business outcome.</p>
+        </section>
+
+        <section className="mb-8 rounded-2xl border border-border-subtle bg-bg-card p-4">
+          <label className="relative block">
+            <Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" />
+            <input value={searchQuery} onChange={(event) => setFilter(setSearchQuery, event.target.value)} placeholder="Search case studies, industries, technologies..." className="w-full rounded-xl border border-border-subtle bg-bg-primary py-3 pl-11 pr-10 text-sm text-text-primary outline-none transition-all focus:border-accent-blue/60" />
+            {searchQuery && <button onClick={() => setFilter(setSearchQuery, '')} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"><X size={15} /></button>}
+          </label>
+        </section>
+
+        <div className="mb-10 space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {CATEGORIES.map((category) => (
+              <button key={category} onClick={() => setFilter(setActiveCategory, category)} className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${activeCategory === category ? 'bg-accent-blue text-white shadow-glow-blue' : 'border border-border-subtle bg-bg-card text-text-secondary hover:border-border-active'}`}>{category}</button>
+            ))}
           </div>
-        ) : (
-          <motion.div
-            key={activeCategory}
-            initial="hidden"
-            animate="show"
-            transition={{ staggerChildren: 0.1 }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-8"
-          >
-            {filtered.length > 0 ? filtered.map((cs) => (
-              <motion.div key={cs._id} variants={itemVariants}>
-                <AnimatedCard className="flex flex-col group overflow-hidden h-full">
-                  {/* Image / placeholder */}
-                  <div className="h-52 overflow-hidden relative">
-                    {cs.imageUrl ? (
-                      <>
-                        <div className="absolute inset-0 bg-gradient-to-t from-bg-card to-transparent z-10 opacity-70" />
-                        <img src={cs.imageUrl} alt={cs.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                      </>
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-accent-blue/10 via-bg-elevated to-accent-purple/10 flex items-center justify-center">
-                        <div className="text-text-muted opacity-20">{catIcon(cs.category)}</div>
-                        <Bot size={40} className="text-text-muted opacity-20 ml-2" />
-                      </div>
-                    )}
-                    {cs.featured && (
-                      <span className="absolute top-4 left-4 z-20 px-3 py-1 bg-accent-blue text-white text-[10px] font-bold tracking-widest uppercase rounded-full">
-                        Featured
-                      </span>
-                    )}
-                  </div>
+          <div className="flex flex-wrap gap-2">
+            {technologyOptions.slice(0, 14).map((tech) => (
+              <button key={tech} onClick={() => setFilter(setActiveTech, tech)} className={`rounded-full px-3 py-1.5 text-xs font-mono transition-all ${activeTech === tech ? 'bg-accent-purple text-white' : 'border border-border-subtle bg-bg-card text-text-muted hover:text-text-primary'}`}>{tech}</button>
+            ))}
+          </div>
+        </div>
 
-                  <div className="p-7 flex flex-col flex-grow">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-accent-blue">{catIcon(cs.category)}</span>
-                      <span className="text-xs font-mono text-text-muted">{cs.category}</span>
-                    </div>
-                    <h3 className="text-xl font-display font-bold text-text-primary mb-2">{cs.title}</h3>
-                    <p className="text-text-secondary text-sm leading-relaxed mb-4 flex-grow">{cs.subtitle}</p>
-
-                    {cs.results && (
-                      <div className="bg-bg-elevated border border-border-subtle rounded-xl px-4 py-3 mb-5">
-                        <p className="text-xs font-mono text-text-muted uppercase tracking-widest mb-1">Result</p>
-                        <p className="text-sm text-text-primary">{cs.results}</p>
-                      </div>
-                    )}
-
-                    <div className="flex flex-wrap gap-2 mb-5">
-                      {(cs.techStack || []).slice(0, 4).map(t => (
-                        <span key={t} className="text-[10px] font-mono px-2 py-1 bg-bg-elevated border border-border-subtle rounded text-text-muted">{t}</span>
-                      ))}
-                      {(cs.techStack || []).length > 4 && (
-                        <span className="text-[10px] font-mono px-2 py-1 bg-bg-elevated border border-border-subtle rounded text-text-muted">+{cs.techStack.length - 4}</span>
-                      )}
-                    </div>
-
-                    {!cs._id.startsWith('ph-') && (
-                      <Link
-                        to={`/case-studies/${cs._id}`}
-                        className="inline-flex items-center gap-2 text-sm font-medium text-accent-blue hover:underline"
-                      >
-                        Read Full Case Study <ArrowRight size={14} />
-                      </Link>
-                    )}
-                  </div>
-                </AnimatedCard>
-              </motion.div>
-            )) : (
-              <div className="col-span-2 text-center text-text-muted py-20">
-                No case studies in this category yet.
-              </div>
+        {loading ? (
+          <div className="grid gap-6 md:grid-cols-2">{[1, 2, 3, 4].map((item) => <div key={item} className="h-96 animate-pulse rounded-2xl bg-bg-card" />)}</div>
+        ) : caseStudies.length ? (
+          <>
+            {featured && (
+              <section className="mb-12">
+                <p className="mb-4 text-xs font-mono uppercase tracking-[0.22em] text-accent-blue">Featured Case Study</p>
+                <CaseCard item={featured} featured />
+              </section>
             )}
-          </motion.div>
+
+            <section>
+              <div className="mb-5 flex items-center justify-between">
+                <h2 className="font-display text-2xl font-bold text-text-primary">Latest Case Studies</h2>
+                <p className="text-sm text-text-muted">{caseStudies.length} result{caseStudies.length === 1 ? '' : 's'}</p>
+              </div>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {paginated.map((item) => <CaseCard key={item._id} item={item} />)}
+              </div>
+              {totalPages > 1 && (
+                <div className="mt-8 flex justify-center gap-2">
+                  {Array.from({ length: totalPages }, (_, index) => index + 1).map((item) => (
+                    <button key={item} onClick={() => setPage(item)} className={`h-10 w-10 rounded-xl text-sm font-bold ${page === item ? 'bg-accent-blue text-white' : 'border border-border-subtle bg-bg-card text-text-secondary'}`}>{item}</button>
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
+        ) : (
+          <div className="rounded-2xl border border-border-subtle bg-bg-card p-12 text-center">
+            <p className="font-display text-2xl font-bold text-text-primary">No case studies found</p>
+            <p className="mt-2 text-text-secondary">Published case studies will appear here.</p>
+          </div>
         )}
 
-        {/* CTA */}
-        <div className="mt-20 text-center">
-          <p className="text-text-secondary mb-6">Have a project in mind?</p>
-          <Link
-            to="/hire"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-accent-blue hover:bg-blue-500 text-white rounded-xl font-bold text-base transition-all shadow-glow-blue"
-          >
-            Book a Discovery Call <ArrowRight size={17} />
-          </Link>
-        </div>
+        <section className="mt-16 rounded-[2rem] border border-accent-blue/20 bg-gradient-to-br from-accent-blue/12 via-bg-card to-accent-purple/10 p-8 text-center md:p-12">
+          <h2 className="font-display text-3xl font-bold text-text-primary">Want a similar outcome?</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-text-secondary">Let’s turn your bottleneck into a measurable software or automation win.</p>
+          <Link to="/hire" className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-accent-blue px-6 py-3 font-bold text-white shadow-glow-blue transition-all hover:-translate-y-1">Book a Discovery Call <ArrowRight size={16} /></Link>
+        </section>
       </div>
     </motion.div>
   );
