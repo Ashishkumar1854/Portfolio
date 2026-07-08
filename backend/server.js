@@ -29,6 +29,7 @@ import searchRoutes from './routes/searchRoutes.js';
 import broadcastRoutes from './routes/broadcastRoutes.js';
 import benefitRoutes from './routes/benefitRoutes.js';
 import technicalSeoRoutes from './routes/technicalSeoRoutes.js';
+import moduleSettingsRoutes from './routes/moduleSettingsRoutes.js';
 import { seedDatabase } from './utils/seeder.js';
 import { startEmailWorker } from './utils/emailQueueProcessor.js';
 
@@ -104,6 +105,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/broadcasts', broadcastRoutes);
 app.use('/api/benefits', benefitRoutes);
+app.use('/api/module-settings', moduleSettingsRoutes);
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'Server is healthy' });
