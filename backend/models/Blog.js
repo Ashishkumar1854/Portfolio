@@ -223,7 +223,7 @@ const blogSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-blogSchema.pre('save', function setComputedFields(next) {
+blogSchema.pre('save', function setComputedFields() {
   this.readingTime = calculateReadingTime(this.content);
   const generatedToc = generateTableOfContents(this.content);
   this.content = generatedToc.content;
@@ -235,7 +235,6 @@ blogSchema.pre('save', function setComputedFields(next) {
   if (this.published && this.status === 'Draft') this.status = 'Published';
   if (this.status === 'Published' && this.published !== false && !this.publishedAt) this.publishedAt = new Date();
   if (this.status !== 'Published') this.published = false;
-  next();
 });
 
 blogSchema.virtual('avgRating').get(function getAverageRating() {
