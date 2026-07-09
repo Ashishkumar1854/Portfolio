@@ -2,6 +2,7 @@ import Blog from '../models/Blog.js';
 import CaseStudy from '../models/CaseStudy.js';
 import Project from '../models/Project.js';
 import Resource from '../models/Resource.js';
+import Service from '../models/Service.js';
 import { buildRssFeed } from '../utils/rss.js';
 import {
   buildAbsoluteUrl,
@@ -117,11 +118,12 @@ const getStaticEntries = () =>
   );
 
 const getDynamicEntries = async () => {
-  const [projects, resources, blogs, caseStudies] = await Promise.all([
+  const [projects, resources, blogs, caseStudies, services] = await Promise.all([
     Project.find(projectQuery).select('slug updatedAt publishedAt createdAt').lean(),
     Resource.find(resourceQuery).select('slug updatedAt updatedAtDisplay publishedAt createdAt').lean(),
     Blog.find(publicLifecycleQuery).select('slug updatedAt createdAt').lean(),
     CaseStudy.find(publicLifecycleQuery).select('slug updatedAt createdAt').lean(),
+    Service.find(publicLifecycleQuery).select('slug updatedAt publishedAt publishedDate createdAt').lean(),
   ]);
 
   return [
@@ -159,6 +161,15 @@ const getDynamicEntries = async () => {
         lastmod: caseStudy.updatedAt || caseStudy.createdAt,
         changefreq: 'monthly',
         priority: '0.7',
+      }),
+    ),
+    ...services.map((service) =>
+      createSitemapEntry({
+        baseUrl: siteUrl,
+        path: getItemPath('services', service),
+        lastmod: service.updatedAt || service.publishedAt || service.publishedDate || service.createdAt,
+        changefreq: 'monthly',
+        priority: '0.75',
       }),
     ),
   ];

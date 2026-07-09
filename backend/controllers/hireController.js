@@ -3,14 +3,38 @@ import cloudinary from '../config/cloudinary.js';
 import fs from 'fs';
 import { sendEmail } from '../utils/sendEmail.js';
 
+const escapeHtml = (value = '') => String(value)
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#039;');
+
+const destroyCloudinaryAsset = async (publicId) => {
+  if (!publicId || !publicId.startsWith('hire-attachments/')) return true;
+
+  const results = await Promise.allSettled([
+    cloudinary.uploader.destroy(publicId, { resource_type: 'image' }),
+    cloudinary.uploader.destroy(publicId, { resource_type: 'raw' }),
+  ]);
+
+  return results.some((result) => (
+    result.status === 'fulfilled' &&
+    ['ok', 'not found'].includes(result.value?.result)
+  ));
+};
+
 // @desc    Submit a hire request (with optional attachment)
 // @route   POST /api/hire
 // @access  Public
 export const submitHireRequest = async (req, res) => {
+  let uploadedPublicId = '';
+
   try {
     const { name, email, serviceType, scope, budget, message } = req.body;
 
     let attachmentUrl = '';
+    let attachmentPublicId = '';
 
     // Handle optional attachment upload to Cloudinary
     if (req.file) {
@@ -21,13 +45,23 @@ export const submitHireRequest = async (req, res) => {
           folder: 'hire-attachments',
         });
         attachmentUrl = result.secure_url;
-      } catch (uploadErr) {
-        console.error('Cloudinary attachment upload failed:', uploadErr);
+        attachmentPublicId = result.public_id;
+        uploadedPublicId = result.public_id;
+      } catch {
+        throw new Error('Attachment upload failed. Please try again.');
       } finally {
         // remove temp file
         if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
       }
     }
+
+    const safeName = escapeHtml(name);
+    const safeEmail = escapeHtml(email);
+    const safeServiceType = escapeHtml(serviceType);
+    const safeScope = escapeHtml(scope);
+    const safeBudget = escapeHtml(budget);
+    const safeMessage = escapeHtml(message);
+    const safeAttachmentUrl = escapeHtml(attachmentUrl);
 
     const hireRequest = await HireRequest.create({
       name,
@@ -37,6 +71,7 @@ export const submitHireRequest = async (req, res) => {
       budget,
       message,
       attachmentUrl,
+      attachmentPublicId,
     });
 
     // Send confirmation to client
@@ -46,18 +81,16 @@ export const submitHireRequest = async (req, res) => {
         subject: 'Hire Request Received – Ashish Portfolio',
         html: `
           <div style="font-family:sans-serif;max-width:600px;margin:auto">
-            <h2 style="color:#4f8eff">Hello ${name} 👋</h2>
-            <p>Thank you for reaching out! I've received your request for <b>${serviceType}</b>.</p>
+            <h2 style="color:#4f8eff">Hello ${safeName}</h2>
+            <p>Thank you for reaching out. I've received your request for <b>${safeServiceType}</b>.</p>
             <p>I'll review your details and get back to you within <b>24 hours</b>.</p>
-            ${scope ? `<p><b>Project Scope:</b> ${scope}</p>` : ''}
+            ${scope ? `<p><b>Project Scope:</b> ${safeScope}</p>` : ''}
             ${attachmentUrl ? `<p>Your attachment was received successfully.</p>` : ''}
             <p style="color:#888;margin-top:24px;">— Ashish Kumar | AI Automation Engineer</p>
           </div>
         `,
       });
-    } catch (err) {
-      console.error('Failed to send client email:', err.message);
-    }
+    } catch {}
 
     // Send notification to admin
     const adminEmails = process.env.ADMIN_EMAILS ? process.env.ADMIN_EMAILS.split(',') : [];
@@ -65,29 +98,31 @@ export const submitHireRequest = async (req, res) => {
       try {
         await sendEmail({
           to: adminEmails[0],
-          subject: `🔔 New Hire Request from ${name}`,
+          subject: `New Hire Request from ${name}`,
           html: `
             <div style="font-family:sans-serif;max-width:600px;margin:auto">
               <h2>New Hire Request</h2>
               <table style="width:100%;border-collapse:collapse">
-                <tr><td style="padding:8px;font-weight:bold;color:#555">Name</td><td style="padding:8px">${name}</td></tr>
-                <tr><td style="padding:8px;font-weight:bold;color:#555">Email</td><td style="padding:8px">${email}</td></tr>
-                <tr><td style="padding:8px;font-weight:bold;color:#555">Service</td><td style="padding:8px">${serviceType}</td></tr>
-                <tr><td style="padding:8px;font-weight:bold;color:#555">Budget</td><td style="padding:8px">${budget}</td></tr>
-                ${scope ? `<tr><td style="padding:8px;font-weight:bold;color:#555">Scope</td><td style="padding:8px">${scope}</td></tr>` : ''}
-                <tr><td style="padding:8px;font-weight:bold;color:#555">Message</td><td style="padding:8px">${message}</td></tr>
-                ${attachmentUrl ? `<tr><td style="padding:8px;font-weight:bold;color:#555">Attachment</td><td style="padding:8px"><a href="${attachmentUrl}">View File</a></td></tr>` : ''}
+                <tr><td style="padding:8px;font-weight:bold;color:#555">Name</td><td style="padding:8px">${safeName}</td></tr>
+                <tr><td style="padding:8px;font-weight:bold;color:#555">Email</td><td style="padding:8px">${safeEmail}</td></tr>
+                <tr><td style="padding:8px;font-weight:bold;color:#555">Service</td><td style="padding:8px">${safeServiceType}</td></tr>
+                <tr><td style="padding:8px;font-weight:bold;color:#555">Budget</td><td style="padding:8px">${safeBudget}</td></tr>
+                ${scope ? `<tr><td style="padding:8px;font-weight:bold;color:#555">Scope</td><td style="padding:8px">${safeScope}</td></tr>` : ''}
+                <tr><td style="padding:8px;font-weight:bold;color:#555">Message</td><td style="padding:8px">${safeMessage}</td></tr>
+                ${attachmentUrl ? `<tr><td style="padding:8px;font-weight:bold;color:#555">Attachment</td><td style="padding:8px"><a href="${safeAttachmentUrl}">View File</a></td></tr>` : ''}
               </table>
             </div>
           `,
         });
-      } catch (err) {
-        console.error('Failed to send admin email:', err.message);
-      }
+      } catch {}
     }
 
     res.status(201).json({ message: 'Request submitted successfully', hireRequest });
   } catch (error) {
+    if (uploadedPublicId) {
+      await destroyCloudinaryAsset(uploadedPublicId);
+    }
+
     res.status(400).json({ message: error.message });
   }
 };
@@ -133,31 +168,34 @@ export const confirmHireRequest = async (req, res) => {
     const request = await HireRequest.findById(req.params.id);
     if (!request) return res.status(404).json({ message: 'Request not found' });
     
-    request.status = 'confirmed';
-    const updatedRequest = await request.save();
+    const safeName = escapeHtml(request.name);
+    const safeServiceType = escapeHtml(request.serviceType);
+    const safeBudget = escapeHtml(request.budget);
+    const safeDate = escapeHtml(request.date || 'TBD (To Be Scheduled)');
+    const safeTrackingLink = escapeHtml(request.trackingLink);
     
     // Send detailed confirmation email
     const emailHtml = `
       <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid rgba(0,0,0,0.05); padding: 24px; border-radius: 12px;">
-        <h2 style="color: #00E5A8; margin-bottom: 20px;">Project Confirmed 🎉</h2>
-        <p>Hello <strong>${request.name}</strong>,</p>
-        <p>I am pleased to inform you that your request for <strong>${request.serviceType}</strong> has been officially confirmed!</p>
+        <h2 style="color: #00E5A8; margin-bottom: 20px;">Project Confirmed</h2>
+        <p>Hello <strong>${safeName}</strong>,</p>
+        <p>Your request for <strong>${safeServiceType}</strong> has been confirmed.</p>
         
         <div style="background-color: #f7f9fc; padding: 16px; border-radius: 8px; margin: 20px 0;">
           <h3 style="margin-top: 0; color: #333;">Confirmed Project Details</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr>
               <td style="padding: 6px 0; color: #666; width: 150px;"><strong>Confirmed Budget:</strong></td>
-              <td style="padding: 6px 0; color: #333;">${request.budget}</td>
+              <td style="padding: 6px 0; color: #333;">${safeBudget}</td>
             </tr>
             <tr>
               <td style="padding: 6px 0; color: #666;"><strong>Timeline / Date:</strong></td>
-              <td style="padding: 6px 0; color: #333;">${request.date || 'TBD (To Be Scheduled)'}</td>
+              <td style="padding: 6px 0; color: #333;">${safeDate}</td>
             </tr>
             ${request.trackingLink ? `
             <tr>
               <td style="padding: 6px 0; color: #666;"><strong>Project Link:</strong></td>
-              <td style="padding: 6px 0; color: #333;"><a href="${request.trackingLink}" target="_blank" style="color: #4f8eff;">${request.trackingLink}</a></td>
+              <td style="padding: 6px 0; color: #333;"><a href="${safeTrackingLink}" target="_blank" style="color: #4f8eff;">${safeTrackingLink}</a></td>
             </tr>` : ''}
           </table>
         </div>
@@ -176,9 +214,12 @@ export const confirmHireRequest = async (req, res) => {
         subject: `Project Confirmed – ${request.serviceType} – Ashish Portfolio`,
         html: emailHtml,
       });
-    } catch (emailErr) {
-      console.error('Failed to send confirmation email:', emailErr.message);
+    } catch {
+      return res.status(502).json({ message: 'Confirmation email could not be sent. Please try again.' });
     }
+
+    request.status = 'confirmed';
+    const updatedRequest = await request.save();
     
     res.json({ message: 'Request confirmed and email sent successfully', request: updatedRequest });
   } catch (error) {
@@ -193,6 +234,12 @@ export const deleteHireRequest = async (req, res) => {
   try {
     const request = await HireRequest.findById(req.params.id);
     if (!request) return res.status(404).json({ message: 'Request not found' });
+    if (request.attachmentPublicId) {
+      const attachmentDeleted = await destroyCloudinaryAsset(request.attachmentPublicId);
+      if (!attachmentDeleted) {
+        return res.status(502).json({ message: 'Attachment cleanup failed. Please try again.' });
+      }
+    }
     await request.deleteOne();
     res.json({ message: 'Request deleted' });
   } catch (error) {

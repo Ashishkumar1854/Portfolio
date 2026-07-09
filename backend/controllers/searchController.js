@@ -1,6 +1,7 @@
 import Blog from '../models/Blog.js';
 import Resource from '../models/Resource.js';
 import CaseStudy from '../models/CaseStudy.js';
+import Service from '../models/Service.js';
 
 // @desc    Global Search across blogs, community posts, and resources
 // @route   GET /api/search
@@ -10,12 +11,12 @@ export const searchAll = async (req, res) => {
     const { q } = req.query;
 
     if (!q) {
-      return res.json({ blogs: [], resources: [], caseStudies: [] });
+      return res.json({ blogs: [], resources: [], caseStudies: [], services: [] });
     }
 
     const regex = new RegExp(q, 'i');
 
-    const [blogs, resources, caseStudies] = await Promise.all([
+    const [blogs, resources, caseStudies, services] = await Promise.all([
       Blog.find({
         published: { $ne: false },
         status: 'Published',
@@ -51,13 +52,29 @@ export const searchAll = async (req, res) => {
           { content: regex },
           { overview: regex }
         ]
+      }).limit(5),
+
+      Service.find({
+        published: { $ne: false },
+        status: 'Published',
+        noIndex: { $ne: true },
+        $or: [
+          { title: regex },
+          { shortDescription: regex },
+          { excerpt: regex },
+          { overview: regex },
+          { category: regex },
+          { technologyStack: regex },
+          { content: regex }
+        ]
       }).limit(5)
     ]);
 
     res.json({
       blogs,
       resources,
-      caseStudies
+      caseStudies,
+      services
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
