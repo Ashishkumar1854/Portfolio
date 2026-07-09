@@ -1,6 +1,7 @@
 import { useLocation } from "react-router-dom";
 
 import SEO from "./SEO";
+import serviceSchema from "../schemas/serviceSchema";
 
 const routeSEOMap = {
   "/": "home",
@@ -26,6 +27,7 @@ const routeSEOMap = {
 
 const pageOwnedSEORoutes = [
   "/projects/",
+  "/services/",
   "/resources/",
   "/blog/",
   "/case-studies/",
@@ -33,6 +35,24 @@ const pageOwnedSEORoutes = [
 
 const SEOManager = () => {
   const { pathname } = useLocation();
+
+  if (pathname === "/hire") {
+    return (
+      <SEO
+        page="hire"
+        schemas={[
+          serviceSchema({
+            name: "Hire Ashish Kumar for AI Automation and Full-Stack Development",
+            path: "/hire",
+            serviceType: "AI Automation, SaaS Development, Full-Stack Development",
+            description:
+              "Project inquiry page for AI automation, n8n workflows, SaaS products, full-stack applications, API integrations, and technical consulting.",
+            audience: "Founders, startups, and teams hiring a product engineer",
+          }),
+        ]}
+      />
+    );
+  }
 
   // Exact route
   if (routeSEOMap[pathname]) {

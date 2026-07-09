@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, Eye, Trash2, Paperclip, ExternalLink, Mail, Save, Calendar, Send } from 'lucide-react';
+import { Check, X, Eye, Trash2, Paperclip, ExternalLink, Save, Calendar, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useApi from '../../hooks/useApi';
 import api from '../../services/api';
 
 const ManageHireRequests = () => {
-  const { data: requests, loading, refresh } = useApi('/api/hire');
+  const { data: requests = [], loading, error, refresh } = useApi('/api/hire', []);
   const [selected, setSelected] = useState(null);
 
   // Editable fields in modal
@@ -29,7 +29,7 @@ const ManageHireRequests = () => {
     try {
       await api.put(`/api/hire/${id}`, { status });
       toast.success(`Request marked as ${status}`);
-      refresh();
+      refresh().catch(() => {});
     } catch {
       toast.error('Failed to update status');
     }
@@ -49,7 +49,7 @@ const ManageHireRequests = () => {
       });
       toast.success('Project details updated successfully');
       setSelected(null);
-      refresh();
+      refresh().catch(() => {});
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update details');
     } finally {
@@ -66,17 +66,17 @@ const ManageHireRequests = () => {
       await api.put(`/api/hire/${selected._id}`, {
         budget: editBudget,
         date: editDate,
-        trackingLink: editTrackingLink,
-        status: 'confirmed'
+        trackingLink: editTrackingLink
       });
 
       // Trigger Resend email dispatcher
       const { data } = await api.post(`/api/hire/${selected._id}/confirm`);
       toast.success(data.message || 'Project confirmed & email sent!');
       setSelected(null);
-      refresh();
+      refresh().catch(() => {});
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to confirm request');
+      refresh().catch(() => {});
     } finally {
       setIsConfirming(false);
     }
@@ -87,7 +87,7 @@ const ManageHireRequests = () => {
     try {
       await api.delete(`/api/hire/${id}`);
       toast.success('Request deleted');
-      refresh();
+      refresh().catch(() => {});
     } catch {
       toast.error('Failed to delete request');
     }
@@ -100,8 +100,14 @@ const ManageHireRequests = () => {
           <h1 className="text-3xl font-display font-bold text-text-primary">Hire & Booking Requests</h1>
           <p className="text-text-secondary text-sm mt-1">Review inbound proposals, schedule timelines, set budgets, and send client confirmation emails.</p>
         </div>
-        <span className="text-text-muted text-sm font-mono">{requests?.length || 0} total</span>
+        <span className="text-text-muted text-sm font-mono">{requests.length} total</span>
       </div>
+
+      {error && (
+        <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300" role="alert">
+          {error}
+        </div>
+      )}
 
       <div className="bg-bg-card border border-border-subtle rounded-2xl overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
@@ -120,7 +126,7 @@ const ManageHireRequests = () => {
             <tbody>
               {loading ? (
                 <tr><td colSpan="7" className="p-8 text-center text-text-muted">Loading requests...</td></tr>
-              ) : requests?.length > 0 ? (
+              ) : requests.length > 0 ? (
                 requests.map((req) => (
                   <tr key={req._id} className="border-b border-border-subtle hover:bg-bg-elevated/50 transition-colors text-sm">
                     <td className="p-4 text-text-secondary whitespace-nowrap">
@@ -169,8 +175,9 @@ const ManageHireRequests = () => {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => openDetailModal(req)}
-                          className="p-2 text-text-muted hover:text-accent-blue bg-bg-primary rounded-lg transition-colors border border-border-subtle hover:border-accent-blue/30"
+                          className="p-2 text-text-muted hover:text-accent-blue bg-bg-primary rounded-lg transition-colors border border-border-subtle hover:border-accent-blue/30 focus:outline-none focus:ring-2 focus:ring-accent-blue/25"
                           title="View & Edit"
+                          aria-label={`View and edit request from ${req.name}`}
                         >
                           <Eye size={15} />
                         </button>
@@ -178,15 +185,17 @@ const ManageHireRequests = () => {
                           <>
                             <button
                               onClick={() => handleUpdateStatusDirect(req._id, 'confirmed')}
-                              className="p-2 text-text-muted hover:text-green-500 bg-bg-primary rounded-lg transition-colors border border-border-subtle hover:border-green-500/30"
-                              title="Confirm"
+                              className="p-2 text-text-muted hover:text-green-500 bg-bg-primary rounded-lg transition-colors border border-border-subtle hover:border-green-500/30 focus:outline-none focus:ring-2 focus:ring-green-500/25"
+                              title="Mark Confirmed"
+                              aria-label={`Mark ${req.name}'s request as confirmed`}
                             >
                               <Check size={15} />
                             </button>
                             <button
                               onClick={() => handleUpdateStatusDirect(req._id, 'rejected')}
-                              className="p-2 text-text-muted hover:text-red-500 bg-bg-primary rounded-lg transition-colors border border-border-subtle hover:border-red-500/30"
+                              className="p-2 text-text-muted hover:text-red-500 bg-bg-primary rounded-lg transition-colors border border-border-subtle hover:border-red-500/30 focus:outline-none focus:ring-2 focus:ring-red-500/25"
                               title="Reject"
+                              aria-label={`Reject ${req.name}'s request`}
                             >
                               <X size={15} />
                             </button>
@@ -194,8 +203,9 @@ const ManageHireRequests = () => {
                         )}
                         <button
                           onClick={() => handleDelete(req._id)}
-                          className="p-2 text-text-muted hover:text-red-500 bg-bg-primary rounded-lg transition-colors border border-border-subtle hover:border-red-500/30"
+                          className="p-2 text-text-muted hover:text-red-500 bg-bg-primary rounded-lg transition-colors border border-border-subtle hover:border-red-500/30 focus:outline-none focus:ring-2 focus:ring-red-500/25"
                           title="Delete"
+                          aria-label={`Delete request from ${req.name}`}
                         >
                           <Trash2 size={15} />
                         </button>
@@ -204,7 +214,7 @@ const ManageHireRequests = () => {
                   </tr>
                 ))
               ) : (
-                <tr><td colSpan="7" className="p-8 text-center text-text-muted">No hire requests found.</td></tr>
+                <tr><td colSpan="7" className="p-10 text-center text-text-muted">No hire requests yet.</td></tr>
               )}
             </tbody>
           </table>
@@ -219,14 +229,23 @@ const ManageHireRequests = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="hire-request-modal-title"
               className="bg-bg-card border border-border-subtle rounded-3xl p-6 md:p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
             >
               <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
                 <div>
-                  <h2 className="text-xl font-bold text-text-primary">Proposal Management</h2>
-                  <p className="text-xs text-text-muted mt-0.5">Edit parameters and email project confirmations to client</p>
+                  <h2 id="hire-request-modal-title" className="text-xl font-bold text-text-primary">Proposal Management</h2>
+                  <p className="text-xs text-text-muted mt-0.5">Review details, update project parameters, and send the confirmation email.</p>
                 </div>
-                <button onClick={() => setSelected(null)} className="text-text-muted hover:text-text-primary"><X size={20} /></button>
+                <button
+                  onClick={() => setSelected(null)}
+                  className="text-text-muted hover:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/25 rounded"
+                  aria-label="Close proposal management modal"
+                >
+                  <X size={20} />
+                </button>
               </div>
 
               <form onSubmit={handleSaveDetails} className="space-y-6">
@@ -291,8 +310,9 @@ const ManageHireRequests = () => {
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-text-secondary text-xs font-mono uppercase tracking-wider mb-2">Budget (Editable)</label>
+                      <label htmlFor="admin-hire-budget" className="block text-text-secondary text-xs font-mono uppercase tracking-wider mb-2">Budget</label>
                       <input
+                        id="admin-hire-budget"
                         type="text"
                         value={editBudget}
                         onChange={(e) => setEditBudget(e.target.value)}
@@ -302,8 +322,9 @@ const ManageHireRequests = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-text-secondary text-xs font-mono uppercase tracking-wider mb-2">Project Date (Editable)</label>
+                      <label htmlFor="admin-hire-date" className="block text-text-secondary text-xs font-mono uppercase tracking-wider mb-2">Project Date</label>
                       <input
+                        id="admin-hire-date"
                         type="text"
                         value={editDate}
                         onChange={(e) => setEditDate(e.target.value)}
@@ -312,8 +333,9 @@ const ManageHireRequests = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-text-secondary text-xs font-mono uppercase tracking-wider mb-2">Status</label>
+                      <label htmlFor="admin-hire-status" className="block text-text-secondary text-xs font-mono uppercase tracking-wider mb-2">Status</label>
                       <select
+                        id="admin-hire-status"
                         value={editStatus}
                         onChange={(e) => setEditStatus(e.target.value)}
                         className="w-full bg-bg-primary border border-border-subtle rounded-xl px-3 py-2.5 text-text-primary focus:outline-none focus:border-accent-blue text-xs font-semibold"
@@ -326,8 +348,9 @@ const ManageHireRequests = () => {
                   </div>
 
                   <div>
-                    <label className="block text-text-secondary text-xs font-mono uppercase tracking-wider mb-2">Tracking / GitHub Link (Editable)</label>
+                    <label htmlFor="admin-hire-tracking-link" className="block text-text-secondary text-xs font-mono uppercase tracking-wider mb-2">Tracking / GitHub Link</label>
                     <input
+                      id="admin-hire-tracking-link"
                       type="url"
                       value={editTrackingLink}
                       onChange={(e) => setEditTrackingLink(e.target.value)}
@@ -343,7 +366,7 @@ const ManageHireRequests = () => {
                     type="button"
                     disabled={isConfirming}
                     onClick={handleConfirmAndSendEmail}
-                    className="px-6 py-2.5 bg-green-500/10 hover:bg-green-500/20 text-green-500 border border-green-500/20 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="px-6 py-2.5 bg-green-500/10 hover:bg-green-500/20 text-green-500 border border-green-500/20 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-green-500/25"
                   >
                     {isConfirming ? (
                       <span className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
@@ -359,14 +382,14 @@ const ManageHireRequests = () => {
                     <button
                       type="button"
                       onClick={() => setSelected(null)}
-                      className="px-5 py-2.5 bg-bg-elevated border border-border-subtle rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
+                      className="px-5 py-2.5 bg-bg-elevated border border-border-subtle rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent-blue/25"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={isUpdating}
-                      className="px-6 py-2.5 bg-accent-blue hover:bg-blue-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-accent-blue/10 flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="px-6 py-2.5 bg-accent-blue hover:bg-blue-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-accent-blue/10 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-accent-blue/25"
                     >
                       {isUpdating ? (
                         <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search as SearchIcon, FileText, Download, ArrowRight, BriefcaseBusiness } from 'lucide-react';
+import { Search as SearchIcon, FileText, Download, ArrowRight, BriefcaseBusiness, Layers } from 'lucide-react';
 import api from '../services/api';
 import SectionHeading from '../components/ui/SectionHeading';
 import AnimatedCard from '../components/ui/AnimatedCard';
@@ -10,14 +10,14 @@ const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const queryParam = searchParams.get('q') || '';
   const [query, setQuery] = useState(queryParam);
-  const [results, setResults] = useState({ blogs: [], resources: [], caseStudies: [] });
+  const [results, setResults] = useState({ blogs: [], resources: [], caseStudies: [], services: [] });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (queryParam) {
       performSearch(queryParam);
     } else {
-      setResults({ blogs: [], resources: [], caseStudies: [] });
+      setResults({ blogs: [], resources: [], caseStudies: [], services: [] });
     }
   }, [queryParam]);
 
@@ -40,7 +40,7 @@ const Search = () => {
     }
   };
 
-  const totalResults = (results.blogs?.length || 0) + (results.resources?.length || 0) + (results.caseStudies?.length || 0);
+  const totalResults = (results.blogs?.length || 0) + (results.resources?.length || 0) + (results.caseStudies?.length || 0) + (results.services?.length || 0);
 
   return (
     <motion.div
@@ -95,6 +95,41 @@ const Search = () => {
             {totalResults === 0 && (
               <div className="text-center py-16 bg-bg-card/20 border border-border-subtle rounded-3xl text-text-muted">
                 No matching results found. Try using different keywords.
+              </div>
+            )}
+
+            {/* Services Section */}
+            {results.services?.length > 0 && (
+              <div>
+                <h2 className="text-lg font-display font-bold text-text-primary mb-6 flex items-center gap-2">
+                  <Layers size={18} className="text-accent-blue" />
+                  Services ({results.services.length})
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {results.services.map((service) => (
+                    <AnimatedCard key={service._id} className="p-6 flex flex-col justify-between h-full hover:border-accent-blue/30">
+                      <div>
+                        <span className="text-[10px] bg-accent-blue/10 border border-accent-blue/20 text-accent-blue px-2 py-0.5 rounded font-mono uppercase">
+                          {service.category || 'Service'}
+                        </span>
+                        <h3 className="font-bold text-text-primary text-base mt-2 hover:text-accent-blue transition-colors">
+                          <Link to={`/services/${service.slug || service._id}`}>{service.title}</Link>
+                        </h3>
+                        {(service.shortDescription || service.excerpt || service.overview) && (
+                          <p className="text-xs text-text-secondary line-clamp-2 mt-2 leading-relaxed">
+                            {service.shortDescription || service.excerpt || service.overview}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex justify-between items-center text-[10px] text-text-muted mt-5 border-t border-border-subtle/50 pt-3 font-mono">
+                        <span>{service.pricingText || service.pricing || 'Custom scope'}</span>
+                        <Link to={`/services/${service.slug || service._id}`} className="text-accent-blue flex items-center gap-0.5 font-bold">
+                          View Service <ArrowRight size={10} />
+                        </Link>
+                      </div>
+                    </AnimatedCard>
+                  ))}
+                </div>
               </div>
             )}
 

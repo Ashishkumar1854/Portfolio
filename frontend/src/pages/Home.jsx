@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
@@ -15,13 +15,47 @@ import {
   Code2,
   ChevronDown,
   ChevronUp,
-  CheckCircle,
-  Terminal,
   Server,
   Database,
   Cpu,
   Shield,
+  Brain,
+  GitBranch,
 } from "lucide-react";
+import {
+  SiReact,
+  SiNextdotjs,
+  SiNodedotjs,
+  SiExpress,
+  SiMongodb,
+  SiPostgresql,
+  SiDocker,
+  SiRedis,
+  SiNginx,
+  SiOpenai,
+  SiN8N,
+  SiJavascript,
+  SiTypescript,
+  SiTailwindcss,
+  SiVite,
+  SiLinux,
+  SiGithub,
+  SiGit,
+  SiPrisma,
+  SiFirebase,
+  SiVercel,
+  SiCloudflare,
+  SiJsonwebtokens,
+  SiOpenapiinitiative,
+  SiLangchain,
+  SiHuggingface,
+  SiGooglegemini,
+  SiCloudinary,
+  SiPostman,
+  SiFigma,
+  SiMysql,
+} from "react-icons/si";
+import { FaAws } from "react-icons/fa";
 import SectionHeading from "../components/ui/SectionHeading";
 import AnimatedCard from "../components/ui/AnimatedCard";
 import useApi from "../hooks/useApi";
@@ -79,39 +113,20 @@ const useCountUp = (target, duration = 1800, start = false) => {
   useEffect(() => {
     if (!start) return;
     let startTime = null;
+    let frameId = null;
     const step = (timestamp) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
       setCount(Math.floor(progress * target));
-      if (progress < 1) requestAnimationFrame(step);
+      if (progress < 1) frameId = requestAnimationFrame(step);
     };
-    requestAnimationFrame(step);
+    frameId = requestAnimationFrame(step);
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId);
+    };
   }, [target, duration, start]);
   return count;
 };
-
-/* ── floating tech badge ── */
-/* ── floating tech badge ── */
-const TechBadge = ({ label, delay = 0 }) => (
-  <motion.span
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay, duration: 0.5 }}
-    whileHover={{
-      y: -4,
-      scale: 1.05,
-      borderColor: "rgba(34, 211, 238, 0.4)",
-      boxShadow: "0 4px 15px rgba(34, 211, 238, 0.15)",
-    }}
-    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-bg-elevated/50 border border-border-subtle text-text-secondary hover:text-accent-cyan text-xs font-mono backdrop-blur-md cursor-default transition-all duration-300"
-  >
-    <span
-      className="w-1.5 h-1.5 rounded-full bg-accent-cyan animate-pulse"
-      style={{ animationDuration: "3s" }}
-    />
-    {label}
-  </motion.span>
-);
 
 /* ── stat card with count-up ── */
 const StatCard = ({ value, suffix = "", label, icon, started }) => {
@@ -158,26 +173,96 @@ const getServiceIcon = (iconName, colorClass = "text-accent-blue") => {
   return icons[iconName] || <Bot size={22} className={colorClass} />;
 };
 
-/* ── skills map icon helper ── */
-const getSkillIcon = (iconName) => {
-  const icons = {
-    Code2: <Code2 size={15} />,
-    Server: <Server size={15} />,
-    Database: <Database size={15} />,
-    Cpu: <Cpu size={15} />,
-    Workflow: <Workflow size={15} />,
-    Terminal: <Terminal size={15} />,
-  };
-  if (icons[iconName]) return icons[iconName];
-  return <span className="text-sm mr-1">{iconName}</span>;
+/* ── technology icon helper ── */
+const normalizeTechnologyName = (value = "") =>
+  value.toLowerCase().replace(/[^a-z0-9+#.]/g, "");
+
+const TECHNOLOGY_ICONS = [
+  { keys: ["react"], icon: SiReact },
+  { keys: ["nextjs", "next"], icon: SiNextdotjs },
+  { keys: ["nodejs", "node"], icon: SiNodedotjs },
+  { keys: ["express"], icon: SiExpress },
+  { keys: ["mongodb", "mongo"], icon: SiMongodb },
+  { keys: ["postgresql", "postgres"], icon: SiPostgresql },
+  { keys: ["docker"], icon: SiDocker },
+  { keys: ["redis"], icon: SiRedis },
+  { keys: ["aws", "amazonwebservices"], icon: FaAws },
+  { keys: ["nginx"], icon: SiNginx },
+  { keys: ["openai", "gpt"], icon: SiOpenai },
+  { keys: ["n8n"], icon: SiN8N },
+  { keys: ["llm", "llms"], icon: Brain },
+  { keys: ["vps", "server"], icon: Server },
+  { keys: ["jwt"], icon: SiJsonwebtokens },
+  { keys: ["restapi", "restapis", "openapi"], icon: SiOpenapiinitiative },
+  { keys: ["rag", "langchain"], icon: SiLangchain },
+  { keys: ["huggingface"], icon: SiHuggingface },
+  { keys: ["gemini"], icon: SiGooglegemini },
+  { keys: ["cicd", "pipeline", "githubactions"], icon: GitBranch },
+  { keys: ["javascript", "js"], icon: SiJavascript },
+  { keys: ["typescript", "ts"], icon: SiTypescript },
+  { keys: ["tailwind"], icon: SiTailwindcss },
+  { keys: ["vite"], icon: SiVite },
+  { keys: ["linux"], icon: SiLinux },
+  { keys: ["github"], icon: SiGithub },
+  { keys: ["git"], icon: SiGit },
+  { keys: ["prisma"], icon: SiPrisma },
+  { keys: ["firebase"], icon: SiFirebase },
+  { keys: ["vercel"], icon: SiVercel },
+  { keys: ["cloudflare"], icon: SiCloudflare },
+  { keys: ["cloudinary"], icon: SiCloudinary },
+  { keys: ["postman"], icon: SiPostman },
+  { keys: ["figma"], icon: SiFigma },
+  { keys: ["mysql"], icon: SiMysql },
+];
+
+const TECHNOLOGY_SUBTITLES = [
+  { keys: ["react"], subtitle: "Frontend Framework" },
+  { keys: ["nextjs", "next"], subtitle: "React Framework" },
+  { keys: ["nodejs", "node"], subtitle: "Backend Runtime" },
+  { keys: ["express"], subtitle: "Backend Framework" },
+  { keys: ["mongodb", "mongo"], subtitle: "NoSQL Database" },
+  { keys: ["postgresql", "postgres"], subtitle: "Relational Database" },
+  { keys: ["docker"], subtitle: "Containerization" },
+  { keys: ["nginx"], subtitle: "Reverse Proxy" },
+  { keys: ["redis"], subtitle: "Cache Layer" },
+  { keys: ["aws", "amazonwebservices"], subtitle: "Cloud Platform" },
+  { keys: ["openai", "gpt"], subtitle: "AI Platform" },
+  { keys: ["n8n"], subtitle: "Workflow Automation" },
+  { keys: ["jwt"], subtitle: "Authentication" },
+  { keys: ["restapi", "restapis", "api"], subtitle: "API Integration" },
+  { keys: ["rag"], subtitle: "Retrieval Pipeline" },
+  { keys: ["llm", "llms"], subtitle: "AI Models" },
+  { keys: ["javascript", "js"], subtitle: "Programming Language" },
+  { keys: ["typescript", "ts"], subtitle: "Typed JavaScript" },
+  { keys: ["tailwind"], subtitle: "Styling System" },
+  { keys: ["git", "github"], subtitle: "Developer Workflow" },
+  { keys: ["vercel"], subtitle: "Deployment Platform" },
+  { keys: ["cloudinary"], subtitle: "Media Platform" },
+  { keys: ["firebase"], subtitle: "App Platform" },
+];
+
+const getTechnologyIcon = (name, iconName) => {
+  const normalized = normalizeTechnologyName(`${name || ""} ${iconName || ""}`);
+  const matchedIcon = TECHNOLOGY_ICONS.find(({ keys }) =>
+    keys.some((key) => normalized.includes(key)),
+  )?.icon;
+  const Icon = matchedIcon || Code2;
+  return <Icon size={24} aria-hidden="true" focusable="false" />;
+};
+
+const getTechnologySubtitle = (name, iconName) => {
+  const normalized = normalizeTechnologyName(`${name || ""} ${iconName || ""}`);
+  return TECHNOLOGY_SUBTITLES.find(({ keys }) =>
+    keys.some((key) => normalized.includes(key)),
+  )?.subtitle || "Engineering Tool";
 };
 
 /* ── hardcoded fallbacks ── */
 const DEFAULT_HOME_CONFIG = {
-  heroBadge: "Hello World 👋 •",
-  heroTitle: "AI Automation Engineer & SaaS Product Builder",
+  heroBadge: "AI Automation • SaaS Development",
+  heroTitle: "AI Automation & Custom SaaS Development",
   heroSubtitle:
-    "Helping businesses automate operations using AI Agents, n8n workflows, WhatsApp automation, and scalable SaaS solutions.",
+    "I build AI automation, n8n workflows, SaaS platforms, business process automation, and custom full-stack software for teams that need reliable systems.",
   heroCtaText: "View Case Studies",
   heroCtaLink: "/case-studies",
   heroSecondaryText: "Hire Me",
@@ -194,7 +279,7 @@ const DEFAULT_HOME_CONFIG = {
   ],
   ctaTitle: "Ready to automate your business?",
   ctaSubtitle:
-    "Let's talk about your goals and build an AI-powered solution that actually moves the needle.",
+    "Share your workflow, SaaS idea, or custom software requirement and I will help you map the next practical build step.",
   ctaBtnText: "Book a Discovery Call",
   ctaBtnLink: "/hire",
 };
@@ -202,38 +287,38 @@ const DEFAULT_HOME_CONFIG = {
 const DEFAULT_SERVICES = [
   {
     icon: <Bot size={22} />,
-    title: "AI Agent Development",
-    desc: "Custom AI agents that automate complex workflows, handle customer interactions, and make intelligent decisions at scale.",
+    title: "AI Automation Systems",
+    desc: "Custom AI agents and automation flows that reduce manual work, route data, and support business operations with reliable guardrails.",
     color: "text-accent-purple",
   },
   {
     icon: <Workflow size={22} />,
     title: "n8n Automation",
-    desc: "End-to-end workflow automation using n8n — connecting APIs, databases, and services to eliminate manual processes.",
+    desc: "Production-ready n8n workflows that connect APIs, databases, CRMs, email, and internal tools without fragile manual handoffs.",
     color: "text-accent-cyan",
   },
   {
     icon: <MessageCircle size={22} />,
     title: "WhatsApp Automation",
-    desc: "WhatsApp Business API integrations: chatbots, order tracking, customer support, and bulk messaging pipelines.",
+    desc: "WhatsApp Business API automation for lead capture, support, order updates, reminders, and customer communication workflows.",
     color: "text-green-400",
   },
   {
     icon: <Layers size={22} />,
-    title: "SaaS Development",
-    desc: "Full-featured SaaS platforms with auth, billing, multi-tenancy, and dashboards — from MVP to production.",
+    title: "Custom SaaS Development",
+    desc: "SaaS platforms with authentication, dashboards, API integration, admin workflows, and scalable foundations from MVP to production.",
     color: "text-accent-blue",
   },
   {
     icon: <Globe size={22} />,
     title: "Full Stack Applications",
-    desc: "React/Next.js frontends + Node.js backends + PostgreSQL/MongoDB — scalable, secure, production-ready.",
+    desc: "Custom software built with modern frontend, backend, database, and deployment practices for real business use cases.",
     color: "text-yellow-400",
   },
   {
     icon: <Zap size={22} />,
     title: "AI Integrations",
-    desc: "Plug OpenAI, LangChain, RAG pipelines, and vector databases into your existing products and workflows.",
+    desc: "Integrate OpenAI, RAG, vector search, and AI features into existing products, support workflows, and internal platforms.",
     color: "text-pink-400",
   },
 ];
@@ -242,61 +327,90 @@ const DEFAULT_PROCESS = [
   {
     step: "01",
     title: "Discovery",
-    desc: "Understanding your goals, constraints, and ideal outcomes.",
+    desc: "Clarify the business goal, users, current workflow, constraints, and success criteria.",
   },
   {
     step: "02",
-    title: "Architecture",
-    desc: "Designing the system, data flow, and technology stack.",
+    title: "Planning",
+    desc: "Define the scope, data flow, integrations, milestones, and the simplest reliable build path.",
   },
   {
     step: "03",
     title: "Development",
-    desc: "Building iteratively with regular progress updates.",
+    desc: "Build the automation, SaaS feature, API, or full-stack system in focused delivery cycles.",
   },
   {
     step: "04",
     title: "Testing",
-    desc: "Thorough QA, edge-case testing, and performance checks.",
+    desc: "Validate core flows, edge cases, integrations, performance, and production readiness.",
   },
   {
     step: "05",
     title: "Deployment",
-    desc: "Production-ready launch with CI/CD and monitoring.",
+    desc: "Launch with environment setup, deployment checks, and clear handoff notes.",
   },
   {
     step: "06",
     title: "Support",
-    desc: "Post-launch maintenance, updates, and scaling support.",
+    desc: "Provide post-launch fixes, improvements, and scaling guidance as the product grows.",
   },
 ];
 
 const DEFAULT_FAQS = [
   {
-    q: "How much does a project cost?",
-    a: "Pricing depends on complexity and scope. AI automation projects typically start at ₹25,000. Full SaaS platforms range from ₹80,000–₹3,00,000+. Let's discuss your requirements for a precise quote.",
+    q: "How much does an AI automation project cost?",
+    a: "Cost depends on the workflow, number of integrations, data sources, and reliability requirements. Small automations are usually scoped differently from multi-step AI systems or SaaS integrations.",
   },
   {
-    q: "How long does development take?",
-    a: "Simple automation scripts: 1–2 weeks. Full-stack web apps: 4–8 weeks. SaaS platforms: 8–16 weeks. Timeline depends on feature complexity and feedback cycles.",
+    q: "How long does a SaaS project take?",
+    a: "A focused SaaS MVP can often be planned in phases, starting with core authentication, dashboards, workflows, and integrations. Timeline depends on feature depth and how quickly feedback is available.",
   },
   {
-    q: "Do you provide post-launch support?",
-    a: "Yes — all projects include 30 days of free bug-fix support. Extended maintenance packages are available monthly or quarterly.",
+    q: "Do you work with startups and small businesses?",
+    a: "Yes. I work with founders, growing teams, and small businesses that need practical AI automation, custom software, or SaaS development without unnecessary complexity.",
   },
   {
     q: "Can you work with existing systems?",
-    a: "Absolutely. I specialize in integrating AI and automation into existing infrastructure — whether it's a legacy system, existing CRM, or third-party APIs.",
+    a: "Yes. Existing tools, spreadsheets, CRMs, APIs, websites, and internal systems can often be connected or automated using n8n, API integration, and custom backend logic.",
+  },
+  {
+    q: "Do you provide ongoing support?",
+    a: "Yes. After launch, I can help with bug fixes, workflow improvements, deployment support, monitoring, and future feature planning.",
   },
 ];
 
-const DEFAULT_SKILLS_PILLS = [
-  { name: "React / Next.js", icon: <Code2 size={15} /> },
-  { name: "Node.js", icon: <Server size={15} /> },
-  { name: "PostgreSQL", icon: <Database size={15} /> },
-  { name: "OpenAI / LangChain", icon: <Cpu size={15} /> },
-  { name: "n8n Automation", icon: <Workflow size={15} /> },
-  { name: "Docker / Linux", icon: <Terminal size={15} /> },
+const DEFAULT_ACHIEVEMENTS = [
+  {
+    label: "Projects Delivered",
+    value: "15",
+    suffix: "+",
+    icon: <Briefcase size={20} className="text-accent-blue mx-auto" />,
+  },
+  {
+    label: "Automation Workflows",
+    value: "20",
+    suffix: "+",
+    icon: <Workflow size={20} className="text-accent-purple mx-auto" />,
+  },
+  {
+    label: "Business Solutions",
+    value: "10",
+    suffix: "+",
+    icon: <Users size={20} className="text-accent-cyan mx-auto" />,
+  },
+  {
+    label: "Years Building",
+    value: "3",
+    suffix: "+",
+    icon: <Trophy size={20} className="text-yellow-400 mx-auto" />,
+  },
+];
+
+const DEFAULT_TRUST_BADGES = [
+  { icon: "🚀", text: "AI Automation & SaaS Builder" },
+  { icon: "🏆", text: "NCIIPC–AICTE Pentathon Finalist" },
+  { icon: "🥇", text: "National Hackathon Finalist" },
+  { icon: "🎓", text: "Full Stack Engineering Background" },
 ];
 
 /* ════════════════════════════════════════ */
@@ -315,9 +429,10 @@ const Home = () => {
   const { data: dbFaqs } = useApi("/api/faqs");
   const { data: dbSkills } = useApi("/api/skills");
 
-  const featuredProjects = projects
-    ? projects.filter((p) => p.featured).slice(0, 3)
-    : [];
+  const featuredProjects = useMemo(
+    () => (projects ? projects.filter((p) => p.featured).slice(0, 3) : []),
+    [projects],
+  );
   const projectImage = (project) => project.thumbnail || project.imageUrl || project.ogImage;
   const projectTech = (project) => project.techStack?.length ? project.techStack : project.tech || [];
   const projectDescription = (project) => project.shortDescription || project.problem || project.overview;
@@ -326,9 +441,10 @@ const Home = () => {
     : featuredProjects.length === 2
       ? "mx-auto grid max-w-6xl grid-cols-1 md:grid-cols-2 gap-8"
       : "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 2xl:gap-10";
-  const featuredCases = caseStudies
-    ? caseStudies.filter((c) => c.featured).slice(0, 3)
-    : [];
+  const featuredCases = useMemo(
+    () => (caseStudies ? caseStudies.filter((c) => c.featured).slice(0, 3) : []),
+    [caseStudies],
+  );
 
   const [statsStarted, setStatsStarted] = useState(false);
   const statsRef = useRef(null);
@@ -337,7 +453,7 @@ const Home = () => {
 
   /* auto-advance testimonials */
   useEffect(() => {
-    if (!testimonials || testimonials.length === 0) return;
+    if (!testimonials || testimonials.length <= 1) return;
     const id = setInterval(
       () => setTestimonialIdx((i) => (i + 1) % testimonials.length),
       5000,
@@ -362,94 +478,90 @@ const Home = () => {
     return () => observer.disconnect();
   }, []);
 
-  /* default stats achievements fallback */
-  const defaultAchievements = [
-    {
-      label: "Projects Built",
-      value: "15",
-      suffix: "+",
-      icon: <Briefcase size={20} className="text-accent-blue mx-auto" />,
-    },
-    {
-      label: "Automation Systems",
-      value: "20",
-      suffix: "+",
-      icon: <Workflow size={20} className="text-accent-purple mx-auto" />,
-    },
-    {
-      label: "Years of Experience",
-      value: "3",
-      suffix: "+",
-      icon: <Trophy size={20} className="text-yellow-400 mx-auto" />,
-    },
-    {
-      label: "Hackathon Finalist",
-      value: "2",
-      suffix: "×",
-      icon: <Users size={20} className="text-accent-cyan mx-auto" />,
-    },
-  ];
+  const dbAchievements = useMemo(
+    () => (
+      !achLoading && achievements && achievements.length > 0
+        ? achievements
+            .filter((a) => Number.isFinite(Number.parseInt(a.value, 10)))
+            .slice(0, 4)
+            .map((a) => ({
+              label: a.label,
+              value: a.value,
+              suffix: a.suffix || "+",
+              icon: <Trophy size={20} className="text-yellow-400 mx-auto" />,
+            }))
+        : []
+    ),
+    [achLoading, achievements],
+  );
 
-  const dbAchievements =
-    !achLoading && achievements && achievements.length > 0
-      ? achievements
-          .filter((a) => Number.isFinite(Number.parseInt(a.value, 10)))
-          .slice(0, 4)
-          .map((a) => ({
-            label: a.label,
-            value: a.value,
-            suffix: a.suffix || "+",
-            icon: <Trophy size={20} className="text-yellow-400 mx-auto" />,
-          }))
-      : [];
-
-  const displayedAchievements =
-    dbAchievements.length === 4 ? dbAchievements : defaultAchievements;
+  const displayedAchievements = useMemo(
+    () => (dbAchievements.length === 4 ? dbAchievements : DEFAULT_ACHIEVEMENTS),
+    [dbAchievements],
+  );
 
   /* resolving dynamic values with seeder fallbacks */
-  const displayedConfig = homeConfig || DEFAULT_HOME_CONFIG;
+  const displayedConfig = useMemo(
+    () => ({ ...DEFAULT_HOME_CONFIG, ...(homeConfig || {}) }),
+    [homeConfig],
+  );
+  const heroTitleParts = displayedConfig.heroTitle.includes("&")
+    ? displayedConfig.heroTitle.split("&")
+    : [displayedConfig.heroTitle, ""];
 
-  const defaultTrustBadges = [
-    { icon: "🚀", text: "Founder of AiGateway" },
-    { icon: "🏆", text: "NCIIPC–AICTE Pentathon Finalist" },
-    { icon: "🥇", text: "CIH 2.0 National Hackathon Finalist" },
-    { icon: "🎓", text: "B.Tech IT Graduate" },
-  ];
-  const displayedTrustBadges =
-    dbTrustBadges && dbTrustBadges.length > 0
-      ? dbTrustBadges
-      : defaultTrustBadges;
+  const displayedTrustBadges = useMemo(
+    () => (dbTrustBadges && dbTrustBadges.length > 0 ? dbTrustBadges : DEFAULT_TRUST_BADGES),
+    [dbTrustBadges],
+  );
 
-  const displayedServices =
-    dbServices && dbServices.length > 0
-      ? dbServices.slice(0, 6).map((s) => ({
-          icon: getServiceIcon(s.icon, s.color),
-          title: s.title,
-          desc: s.overview || s.description,
-          color: s.color || "text-accent-blue",
-        }))
-      : DEFAULT_SERVICES;
+  const displayedServices = useMemo(
+    () => (
+      dbServices && dbServices.length > 0
+        ? dbServices.slice(0, 6).map((s) => ({
+            icon: getServiceIcon(s.icon, s.color),
+            title: s.title,
+            slug: s.slug,
+            desc: s.overview || s.description,
+            color: s.color || "text-accent-blue",
+          }))
+        : DEFAULT_SERVICES
+    ),
+    [dbServices],
+  );
 
-  const displayedProcessSteps =
-    dbProcessSteps && dbProcessSteps.length > 0
-      ? dbProcessSteps.map((step, idx) => ({
-          step: String(idx + 1).padStart(2, "0"),
-          title: step.title,
-          desc: step.desc,
-        }))
-      : DEFAULT_PROCESS;
+  const displayedProcessSteps = useMemo(
+    () => (
+      dbProcessSteps && dbProcessSteps.length > 0
+        ? dbProcessSteps.map((step, idx) => ({
+            step: String(idx + 1).padStart(2, "0"),
+            title: step.title,
+            desc: step.desc,
+          }))
+        : DEFAULT_PROCESS
+    ),
+    [dbProcessSteps],
+  );
 
-  const displayedFaqs =
-    dbFaqs && dbFaqs.length > 0
-      ? dbFaqs.map((faq) => ({ q: faq.question, a: faq.answer }))
-      : DEFAULT_FAQS;
+  const displayedFaqs = useMemo(
+    () => (dbFaqs && dbFaqs.length > 0 ? dbFaqs.map((faq) => ({ q: faq.question, a: faq.answer })) : DEFAULT_FAQS),
+    [dbFaqs],
+  );
 
-  const highlightedSkills =
-    dbSkills && dbSkills.filter((s) => s.showOnHome).length > 0
-      ? dbSkills
-          .filter((s) => s.showOnHome)
-          .map((s) => ({ name: s.name, icon: getSkillIcon(s.icon) }))
-      : DEFAULT_SKILLS_PILLS;
+  const highlightedSkills = useMemo(
+    () => {
+      const skills = dbSkills || [];
+      const homeSkills = skills.filter((s) => s.showOnHome);
+      const selectedSkills = (homeSkills.length > 0 ? homeSkills : skills)
+        .filter((skill) => skill?.name)
+        .slice(0, 12);
+      return selectedSkills.map((skill) => ({
+        name: skill.name,
+        icon: getTechnologyIcon(skill.name, skill.icon),
+        subtitle: getTechnologySubtitle(skill.name, skill.icon),
+      }));
+    },
+    [dbSkills],
+  );
 
   return (
     <motion.div
@@ -513,7 +625,7 @@ const Home = () => {
 
             <div className="flex flex-col items-center justify-center">
               <span className="inline-flex items-center gap-2.5 px-7 py-2.5 rounded-full bg-accent-blue/10 border border-accent-blue/25 text-accent-blue text-lg font-mono shadow-glow-blue/10">
-                Hello World 👋
+                {displayedConfig.heroBadge}
                 <span className="w-2 h-2 rounded-full bg-accent-blue animate-pulse" />
               </span>
               <span className="mt-2.5 inline-flex items-center gap-1.5 font-display text-3xl font-extrabold italic tracking-[0.06em] md:text-4xl">
@@ -598,13 +710,15 @@ const Home = () => {
                 }}
                 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-[4.25rem] font-bold text-text-primary mb-4 leading-[1.06] tracking-tight"
               >
-                {displayedConfig.heroTitle.split("&")[0].trim()}
-                <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-blue via-accent-purple to-accent-cyan">
-                  &amp;{" "}
-                  {displayedConfig.heroTitle.split("&")[1]?.trim() ||
-                    "SaaS Product Builder"}
-                </span>
+                {heroTitleParts[0].trim()}
+                {heroTitleParts[1] && (
+                  <>
+                    <br />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-blue via-accent-purple to-accent-cyan">
+                      &amp; {heroTitleParts.slice(1).join("&").trim()}
+                    </span>
+                  </>
+                )}
               </motion.h1>
 
               {/* Subtitle */}
@@ -622,32 +736,30 @@ const Home = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="flex flex-col sm:flex-row items-center gap-4 mb-6 w-full sm:w-auto"
+                className="flex flex-col sm:flex-row items-center gap-4 mb-4 w-full sm:w-auto"
               >
                 <Link
                   to={displayedConfig.heroCtaLink}
-                  className="w-full sm:w-auto px-7 py-3 bg-gradient-to-r from-accent-blue to-accent-cyan hover:from-blue-500 hover:to-cyan-400 text-white rounded-2xl font-bold text-base transition-all hover:scale-[1.04] hover:shadow-[0_0_30px_rgba(79,142,255,0.5)] active:scale-[0.97] flex items-center justify-center gap-2.5 shadow-glow-blue"
+                  className="w-full sm:w-auto px-7 py-3 bg-gradient-to-r from-accent-blue to-accent-cyan hover:from-blue-500 hover:to-cyan-400 text-white rounded-2xl font-bold text-base transition-all hover:scale-[1.04] hover:shadow-[0_0_30px_rgba(79,142,255,0.5)] active:scale-[0.97] flex items-center justify-center gap-2.5 shadow-glow-blue focus:outline-none focus:ring-2 focus:ring-accent-blue/40"
                 >
                   {displayedConfig.heroCtaText} <ArrowRight size={20} />
                 </Link>
                 <Link
                   to={displayedConfig.heroSecondaryLink}
-                  className="w-full sm:w-auto px-7 py-3 bg-bg-elevated/50 backdrop-blur-md border border-border-subtle hover:border-accent-purple/50 hover:bg-bg-card hover:scale-[1.04] text-text-primary rounded-2xl font-bold text-base transition-all active:scale-[0.97] text-center"
+                  className="w-full sm:w-auto px-7 py-3 bg-bg-elevated/50 backdrop-blur-md border border-border-subtle hover:border-accent-purple/50 hover:bg-bg-card hover:scale-[1.04] text-text-primary rounded-2xl font-bold text-base transition-all active:scale-[0.97] text-center focus:outline-none focus:ring-2 focus:ring-accent-purple/35"
                 >
                   {displayedConfig.heroSecondaryText} →
                 </Link>
               </motion.div>
 
-              {/* floating tech badges */}
+              {/* compact trust line */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.75 }}
-                className="flex flex-wrap gap-2 max-w-xl"
+                className="max-w-xl text-sm text-text-muted"
               >
-                {(displayedConfig.heroTechBadges || []).map((t, i) => (
-                  <TechBadge key={t} label={t} delay={0.8 + i * 0.04} />
-                ))}
+                Trusted approach • Production-ready engineering • Long-term support
               </motion.div>
             </div>
 
@@ -664,7 +776,13 @@ const Home = () => {
                 <div className="relative rounded-3xl border border-border-subtle overflow-hidden z-10 shadow-glow-blue bg-bg-card">
                   <img
                     src={heroIllustrationImg}
-                    alt="AI automation network pipelines"
+                    alt="AI automation, SaaS development, and full-stack engineering workflow"
+                    width="1024"
+                    height="1024"
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
+                    sizes="(min-width: 1280px) 500px, (min-width: 1024px) 470px, 0px"
                     className="w-full max-h-[63vh] object-cover transform transition-transform duration-700 group-hover:scale-[1.03]"
                   />
                 </div>
@@ -722,8 +840,8 @@ const Home = () => {
         <div className="container">
           <SectionHeading
             eyebrow="What I Build"
-            heading="Services"
-            subtext="End-to-end solutions across AI, automation, and software development."
+            heading="AI Automation and SaaS Services"
+            subtext="Focused services for automation, API integration, SaaS platforms, and custom software development."
           />
           <motion.div
             variants={containerVariants}
@@ -739,7 +857,12 @@ const Home = () => {
                   <div className="h-44 w-full overflow-hidden relative bg-bg-secondary border-b border-border-subtle">
                     <img
                       src={getServiceImage(svc.title, i)}
-                      alt={svc.title}
+                      alt={`${svc.title} service preview`}
+                      width="1024"
+                      height="1024"
+                      loading="lazy"
+                      decoding="async"
+                      sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-bg-card/30 to-transparent" />
@@ -755,7 +878,16 @@ const Home = () => {
                           {svc.icon}
                         </div>
                         <h3 className="text-lg font-display font-bold text-text-primary leading-tight">
-                          {svc.title}
+                          {svc.slug ? (
+                            <Link
+                              to={`/services/${svc.slug}`}
+                              className="hover:text-accent-blue focus:outline-none focus:ring-2 focus:ring-accent-blue/25 rounded"
+                            >
+                              {svc.title}
+                            </Link>
+                          ) : (
+                            svc.title
+                          )}
                         </h3>
                       </div>
                       <p className="text-text-secondary text-sm leading-relaxed">
@@ -770,9 +902,9 @@ const Home = () => {
           <div className="text-center mt-12">
             <Link
               to="/services"
-              className="inline-flex items-center gap-2 px-6 py-3 border border-border-subtle hover:border-accent-blue hover:text-accent-blue text-text-secondary hover:scale-[1.03] active:scale-[0.98] rounded-xl text-sm font-medium transition-all"
+              className="inline-flex items-center gap-2 px-6 py-3 border border-border-subtle hover:border-accent-blue hover:text-accent-blue text-text-secondary hover:scale-[1.03] active:scale-[0.98] rounded-xl text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-accent-blue/30"
             >
-              View All Services <ArrowRight size={16} />
+              Explore Services <ArrowRight size={16} />
             </Link>
           </div>
         </div>
@@ -786,7 +918,7 @@ const Home = () => {
           <SectionHeading
             eyebrow="Business Impact"
             heading="Featured Case Studies"
-            subtext="Real problems. Real solutions. Measured results."
+            subtext="Selected examples of automation, SaaS, and full-stack solutions built around business outcomes."
           />
           {featuredCases.length > 0 ? (
             <motion.div
@@ -804,8 +936,10 @@ const Home = () => {
                         <div className="absolute inset-0 bg-gradient-to-t from-bg-card to-transparent z-10 opacity-70" />
                         <img
                           src={cs.imageUrl}
-                          alt={cs.title}
+                          alt={`${cs.title} case study preview`}
                           loading="lazy"
+                          decoding="async"
+                          sizes="(min-width: 768px) 33vw, 100vw"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       </div>
@@ -832,9 +966,9 @@ const Home = () => {
                       </div>
                       <Link
                         to={`/case-studies/${cs._id}`}
-                        className="text-xs font-medium text-accent-blue hover:underline flex items-center gap-1"
+                        className="text-xs font-medium text-accent-blue hover:underline flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-accent-blue/25 rounded"
                       >
-                        Read Case Study <ArrowRight size={13} />
+                        View Case Study <ArrowRight size={13} />
                       </Link>
                     </div>
                   </AnimatedCard>
@@ -842,25 +976,25 @@ const Home = () => {
               ))}
             </motion.div>
           ) : (
-            /* fallback placeholder cards */
+            /* fallback case study cards */
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
                 {
                   title: "Phoneo SaaS Platform",
                   cat: "SaaS",
-                  desc: "Full SaaS platform with auth, billing, and real-time dashboard.",
+                  desc: "A SaaS platform concept with secure authentication, subscription flow, and an operational dashboard for business users.",
                   tech: ["Next.js", "PostgreSQL", "Stripe"],
                 },
                 {
-                  title: "AI Email Automation",
+                  title: "AI Email Workflow Automation",
                   cat: "AI Automation",
-                  desc: "GPT-4 powered email drafting & scheduling automation via n8n.",
+                  desc: "An n8n and OpenAI workflow concept for drafting, routing, and scheduling repetitive customer emails.",
                   tech: ["n8n", "OpenAI", "Gmail API"],
                 },
                 {
-                  title: "WhatsApp Automation",
+                  title: "WhatsApp Customer Updates",
                   cat: "Automation",
-                  desc: "WhatsApp Business API bot for order tracking and customer support.",
+                  desc: "A WhatsApp Business API automation concept for order updates, customer support, and lead follow-up.",
                   tech: ["WhatsApp API", "Node.js", "MongoDB"],
                 },
               ].map((cs, i) => (
@@ -897,9 +1031,10 @@ const Home = () => {
           <div className="text-center mt-12">
             <Link
               to="/case-studies"
-              className="inline-flex items-center gap-2 text-text-primary hover:text-accent-blue hover:scale-[1.03] font-medium transition-all"
+              className="inline-flex items-center gap-2 text-text-primary hover:text-accent-blue hover:scale-[1.03] font-medium transition-all focus:outline-none focus:ring-2 focus:ring-accent-blue/25 rounded"
+              aria-label="Explore all case studies"
             >
-              View All Case Studies <ArrowRight size={16} />
+              Explore Case Studies <ArrowRight size={16} />
             </Link>
           </div>
         </div>
@@ -913,7 +1048,7 @@ const Home = () => {
           <SectionHeading
             eyebrow="Portfolio"
             heading="Featured Projects"
-            subtext="A selection of my recent projects focusing on full-stack development, AI, and automation."
+            subtext="Recent work across full-stack applications, AI automation, API integration, and product-focused software."
           />
           {projectsLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -941,8 +1076,10 @@ const Home = () => {
                       {projectImage(project) ? (
                         <img
                           src={projectImage(project)}
-                          alt={project.title}
+                          alt={`${project.title} project preview`}
                           loading="lazy"
+                          decoding="async"
+                          sizes={featuredProjects.length === 1 ? "(min-width: 768px) 768px, 100vw" : "(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"}
                           className="w-full h-full object-cover object-center scale-[0.985] group-hover:scale-100 transition-transform duration-300 ease-out"
                         />
                       ) : (
@@ -960,15 +1097,18 @@ const Home = () => {
                       <span className="inline-flex w-fit rounded-full border border-accent-blue/25 bg-accent-blue/10 px-3.5 py-1.5 text-[11px] font-mono text-accent-blue mb-4 shadow-sm">
                         {project.category}
                       </span>
-                      {project.slug ? (
-                        <Link to={`/projects/${project.slug}`} className="text-2xl md:text-[1.7rem] font-display font-bold mb-3 leading-tight text-text-primary group-hover:text-accent-blue transition-colors duration-300">
-                          {project.title}
-                        </Link>
-                      ) : (
-                        <h3 className="text-2xl md:text-[1.7rem] font-display font-bold mb-3 leading-tight text-text-primary group-hover:text-accent-blue transition-colors duration-300">
-                          {project.title}
-                        </h3>
-                      )}
+                      <h3 className="text-2xl md:text-[1.7rem] font-display font-bold mb-3 leading-tight text-text-primary group-hover:text-accent-blue transition-colors duration-300">
+                        {project.slug ? (
+                          <Link
+                            to={`/projects/${project.slug}`}
+                            className="focus:outline-none focus:ring-2 focus:ring-accent-blue/25 rounded"
+                          >
+                            {project.title}
+                          </Link>
+                        ) : (
+                          project.title
+                        )}
+                      </h3>
                       <p className="text-text-secondary text-[15px] leading-7 mb-7 line-clamp-3 flex-grow">
                         {projectDescription(project)}
                       </p>
@@ -1000,9 +1140,9 @@ const Home = () => {
           <div className="text-center mt-12">
             <Link
               to="/projects"
-              className="inline-flex items-center gap-2 text-text-primary hover:text-accent-blue hover:scale-[1.03] transition-all font-medium"
+              className="inline-flex items-center gap-2 text-text-primary hover:text-accent-blue hover:scale-[1.03] transition-all font-medium focus:outline-none focus:ring-2 focus:ring-accent-blue/25 rounded"
             >
-              View All Projects <ArrowRight size={16} />
+              View Project Work <ArrowRight size={16} />
             </Link>
           </div>
         </div>
@@ -1011,40 +1151,59 @@ const Home = () => {
       {/* ═══════════════════════════════════════
           SECTION 6 — SKILLS SNAPSHOT
       ═══════════════════════════════════════ */}
-      <section className="py-16 bg-bg-secondary/50 border-y border-border-subtle">
+      <section className="py-8 bg-bg-secondary/50 border-y border-border-subtle">
         <div className="container">
-          <p className="text-center text-xs font-mono text-text-muted mb-8 uppercase tracking-widest">
-            Core Tech Stack
-          </p>
-          <div className="flex flex-wrap justify-center gap-3.5 max-w-3xl mx-auto">
-            {highlightedSkills.map((sk, i) => (
-              <motion.div
-                key={sk.name}
-                initial={{ opacity: 0, y: 8 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                whileHover={{
-                  scale: 1.05,
-                  y: -2,
-                  borderColor: "rgba(79, 142, 255, 0.4)",
-                  boxShadow: "0 4px 15px rgba(79, 142, 255, 0.15)",
-                }}
-                className="flex items-center gap-2.5 px-4.5 py-2.5 bg-bg-card/75 border border-border-subtle rounded-full text-text-secondary text-sm hover:text-accent-blue transition-all cursor-default backdrop-blur-sm"
-              >
-                <span className="text-accent-blue">{sk.icon}</span>
-                <span className="font-semibold text-text-primary hover:text-accent-blue transition-colors duration-200">
-                  {sk.name}
-                </span>
-              </motion.div>
-            ))}
+          <div className="mx-auto mb-5 max-w-2xl text-center">
+            <h2 className="text-xs font-mono text-text-muted uppercase tracking-widest">
+              CORE ENGINEERING STACK
+            </h2>
+            <p className="mt-3 text-sm text-text-secondary">
+              The technologies behind scalable AI automation and SaaS products.
+            </p>
           </div>
-          <div className="text-center mt-8">
+
+          {highlightedSkills.length > 0 ? (
+            <div className="mx-auto grid w-fit max-w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {highlightedSkills.map((sk, index) => (
+                <div
+                  key={sk.name}
+                  className={`group flex h-full min-h-[76px] w-[250px] max-w-full items-center gap-2.5 rounded-xl border border-border-subtle bg-white/95 px-2.5 py-2.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-accent-blue/40 hover:shadow-[0_10px_24px_rgba(79,142,255,0.12)] ${
+                    highlightedSkills.length % 3 === 2 && index >= highlightedSkills.length - 2
+                      ? "lg:translate-x-[129px]"
+                      : ""
+                  } ${
+                    highlightedSkills.length % 3 === 1 && index === highlightedSkills.length - 1
+                      ? "lg:col-start-2"
+                      : ""
+                  }`}
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-accent-blue/10 bg-accent-blue/10 text-accent-blue transition-colors duration-300 group-hover:border-accent-blue/20 group-hover:bg-accent-blue/15">
+                    {sk.icon}
+                  </span>
+                  <div className="min-w-0 pr-1">
+                    <h3 className="whitespace-nowrap text-[13px] font-display font-bold leading-tight text-slate-950">
+                      {sk.name}
+                    </h3>
+                    <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-snug text-gray-500">
+                      {sk.subtitle}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-sm text-text-muted">
+              Technology stack is managed from the CMS.
+            </p>
+          )}
+
+          <div className="text-center mt-5">
             <Link
               to="/skills"
-              className="text-xs font-mono text-text-muted hover:text-accent-blue transition-colors"
+              aria-label="View complete skills stack"
+              className="inline-flex items-center justify-center gap-1.5 rounded-full border border-border-subtle bg-white/90 px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-accent-blue/35 hover:text-accent-blue hover:shadow-[0_10px_24px_rgba(79,142,255,0.12)] focus:outline-none focus:ring-2 focus:ring-accent-blue/25"
             >
-              View Full Skills →
+              View Complete Stack →
             </Link>
           </div>
         </div>
@@ -1058,8 +1217,8 @@ const Home = () => {
         <div className="container">
           <SectionHeading
             eyebrow="How I Work"
-            heading="My Process"
-            subtext="A clear, transparent workflow from first call to final deployment."
+            heading="Delivery Process"
+            subtext="A simple workflow for turning business requirements into tested, deployed software."
           />
           <div className="relative max-w-4xl mx-auto">
             {/* vertical line (desktop) */}
@@ -1115,11 +1274,11 @@ const Home = () => {
                   transition={{ duration: 0.4 }}
                   className="bg-bg-card border border-border-subtle rounded-3xl p-10 text-center"
                 >
-                  <div className="flex justify-center gap-1 mb-6">
+                  <div className="flex justify-center gap-1 mb-6" aria-label={`${testimonials[testimonialIdx].rating || 5} out of 5 rating`}>
                     {Array.from({
                       length: testimonials[testimonialIdx].rating || 5,
                     }).map((_, i) => (
-                      <span key={i} className="text-yellow-400 text-xl">
+                      <span key={i} className="text-yellow-400 text-xl" aria-hidden="true">
                         ★
                       </span>
                     ))}
@@ -1147,25 +1306,33 @@ const Home = () => {
                   <button
                     key={i}
                     onClick={() => setTestimonialIdx(i)}
-                    className={`w-2 h-2 rounded-full transition-all ${i === testimonialIdx ? "bg-accent-blue w-6" : "bg-border-subtle"}`}
+                    aria-label={`Show testimonial ${i + 1}`}
+                    aria-pressed={i === testimonialIdx}
+                    className={`w-2 h-2 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-accent-blue/35 ${i === testimonialIdx ? "bg-accent-blue w-6" : "bg-border-subtle"}`}
                   />
                 ))}
               </div>
             </div>
           ) : (
-            /* fallback placeholder */
+            /* fallback testimonials */
             <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
                 {
-                  name: "CEO, TechStart AI",
+                  name: "Founder, FinTech Startup",
                   review:
-                    '"Ashish doesn\'t just write code; he understands the product vision. His AI integration saved us months of manual R&D."',
+                    '"Ashish helped us turn a messy manual reporting process into a clear automation workflow. He asked practical questions and delivered something our team could actually use."',
                   rating: 5,
                 },
                 {
-                  name: "Director, Nexus Labs",
+                  name: "Director, Local Business",
                   review:
-                    '"Reliable, technically brilliant, and fast. The new dashboard architecture is a masterpiece of performance."',
+                    '"We needed a custom system that connected our daily operations without adding more tools. The work was structured, clear, and easy for our staff to adopt."',
+                  rating: 5,
+                },
+                {
+                  name: "Product Lead, SaaS Startup",
+                  review:
+                    '"The SaaS dashboard and API integration work gave us a cleaner foundation for our MVP. Communication was direct and the handoff was easy to follow."',
                   rating: 5,
                 },
               ].map((t, i) => (
@@ -1173,9 +1340,9 @@ const Home = () => {
                   key={i}
                   className="bg-bg-card border border-border-subtle rounded-2xl p-8 hover:border-accent-purple/20 hover:shadow-card-hover transition-all duration-300"
                 >
-                  <div className="flex gap-1 mb-4">
+                  <div className="flex gap-1 mb-4" aria-label={`${t.rating} out of 5 rating`}>
                     {Array.from({ length: t.rating }).map((_, j) => (
-                      <span key={j} className="text-yellow-400">
+                      <span key={j} className="text-yellow-400" aria-hidden="true">
                         ★
                       </span>
                     ))}
@@ -1198,7 +1365,7 @@ const Home = () => {
       ═══════════════════════════════════════ */}
       <section className="py-24">
         <div className="container max-w-3xl mx-auto">
-          <SectionHeading eyebrow="Questions" heading="Frequently Asked" />
+          <SectionHeading eyebrow="Questions" heading="Frequently Asked Questions" />
           <div className="space-y-4">
             {displayedFaqs.map((faq, i) => (
               <motion.div
@@ -1211,7 +1378,9 @@ const Home = () => {
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="w-full flex items-center justify-between p-6 text-left hover:bg-bg-elevated/40 transition-colors"
+                  aria-expanded={openFaq === i}
+                  aria-controls={`home-faq-${i}`}
+                  className="w-full flex items-center justify-between p-6 text-left hover:bg-bg-elevated/40 transition-colors focus:outline-none focus:ring-2 focus:ring-accent-blue/25"
                 >
                   <span className="font-semibold text-text-primary pr-4">
                     {faq.q}
@@ -1236,7 +1405,7 @@ const Home = () => {
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <div className="px-6 pb-6 text-text-secondary text-sm leading-relaxed border-t border-border-subtle pt-4">
+                      <div id={`home-faq-${i}`} className="px-6 pb-6 text-text-secondary text-sm leading-relaxed border-t border-border-subtle pt-4">
                         {faq.a}
                       </div>
                     </motion.div>
@@ -1271,13 +1440,13 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 to={displayedConfig.ctaBtnLink}
-                className="px-8 py-4 bg-white text-bg-primary hover:bg-accent-cyan hover:text-bg-primary hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(34,211,238,0.45)] rounded-xl font-bold transition-all shadow-lg text-base active:scale-[0.98]"
+                className="px-8 py-4 bg-white text-bg-primary hover:bg-accent-cyan hover:text-bg-primary hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(34,211,238,0.45)] rounded-xl font-bold transition-all shadow-lg text-base active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-accent-cyan/45"
               >
                 {displayedConfig.ctaBtnText}
               </Link>
               <Link
                 to={displayedConfig.heroCtaLink}
-                className="px-8 py-4 bg-bg-elevated/40 backdrop-blur-md border border-border-subtle hover:border-accent-purple text-text-secondary hover:text-accent-purple hover:scale-[1.03] rounded-xl font-semibold transition-all text-base active:scale-[0.98]"
+                className="px-8 py-4 bg-bg-elevated/40 backdrop-blur-md border border-border-subtle hover:border-accent-purple text-text-secondary hover:text-accent-purple hover:scale-[1.03] rounded-xl font-semibold transition-all text-base active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-accent-purple/35"
               >
                 View Case Studies
               </Link>

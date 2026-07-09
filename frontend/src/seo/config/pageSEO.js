@@ -2,20 +2,23 @@ import seoConfig from "./seoConfig";
 
 export const pageSEO = {
   home: {
-    title: "Ashish Kumar | AI Automation Engineer & SaaS Product Builder",
+    title: "Ashish Kumar | AI Automation, SaaS & Full-Stack Engineer",
 
     description:
-      "Build AI-powered automation systems, SaaS products, and full-stack applications with Ashish Kumar. Explore AI agents, n8n automation, React, Node.js projects, case studies, and developer resources.",
+      "AI automation engineer and custom SaaS developer building n8n workflows, WhatsApp automation, API integrations, full-stack applications, and business process automation for growing teams.",
 
     keywords: [
       "Ashish Kumar",
       "AI Automation Engineer",
+      "Custom SaaS Developer",
       "SaaS Product Builder",
+      "Full Stack Engineer",
       "AI Agents",
       "n8n Automation",
+      "Business Process Automation",
+      "API Integration",
       "React Developer",
       "Node.js Developer",
-      "Full Stack Developer",
       "WhatsApp Automation",
       "Portfolio",
     ],
@@ -299,10 +302,10 @@ export const pageSEO = {
 
   hire: {
     title:
-      "Hire Ashish Kumar | AI Automation Engineer, SaaS Developer & Technical Consultant",
+      "Hire Ashish Kumar | AI Automation, SaaS & Full-Stack Developer",
 
     description:
-      "Hire Ashish Kumar for AI automation, AI agent development, n8n workflow automation, SaaS development, full-stack applications, DevOps consulting, WhatsApp automation, API integrations, and scalable software solutions. Discuss your project, choose a service, and submit your requirements for a custom proposal.",
+      "Hire Ashish Kumar for AI automation, n8n workflows, SaaS development, full-stack applications, API integrations, WhatsApp automation, and technical consulting. Share your scope and get a practical response within 24 hours.",
 
     keywords: [
       "Hire AI Automation Engineer",
