@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -16,7 +16,7 @@ const ManageJourneys = () => {
         await api.delete(`/api/journey/${id}`);
         toast.success('Event deleted');
         window.location.reload();
-      } catch (error) {
+      } catch {
         toast.error('Failed to delete event');
       }
     }

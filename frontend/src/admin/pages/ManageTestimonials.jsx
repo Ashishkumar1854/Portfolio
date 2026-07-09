@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Edit2, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -16,7 +16,7 @@ const ManageTestimonials = () => {
         await api.delete(`/api/testimonials/${id}`);
         toast.success('Testimonial deleted');
         window.location.reload();
-      } catch (error) {
+      } catch {
         toast.error('Failed to delete testimonial');
       }
     }
@@ -29,7 +29,7 @@ const ManageTestimonials = () => {
       });
       toast.success(`Testimonial ${!testimonial.approved ? 'approved' : 'hidden'}`);
       window.location.reload();
-    } catch (error) {
+    } catch {
       toast.error('Failed to update status');
     }
   };

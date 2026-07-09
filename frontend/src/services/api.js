@@ -17,7 +17,7 @@ const getBaseURL = () => {
       apiUrl.hostname = pageHost;
       return apiUrl.toString().replace(/\/$/, '');
     }
-  } catch (error) {
+  } catch {
     return configuredUrl;
   }
 

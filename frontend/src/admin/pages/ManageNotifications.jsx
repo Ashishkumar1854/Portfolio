@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Bell, Megaphone, CheckCircle } from 'lucide-react';
+import { Send, Megaphone, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 

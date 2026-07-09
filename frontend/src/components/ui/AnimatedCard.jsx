@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 
 const AnimatedCard = ({ children, className = '', delay = 0 }) => {

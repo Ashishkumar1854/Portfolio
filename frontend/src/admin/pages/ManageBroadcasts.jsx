@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { 
-  Send, Users, Mail, Bell, BarChart3, Plus, 
-  Calendar, Eye, CheckCircle, Percent, AlertCircle, X, ChevronRight
+  Send, Users, Mail, BarChart3, Plus,
+  Eye, Percent, X, ChevronRight
 } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';

@@ -1,9 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, Edit2, Eye, FileText, Globe, Image as ImageIcon, Plus, Search, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 import useApi from '../../hooks/useApi';
 import api from '../../services/api';
 
@@ -275,9 +273,13 @@ const BlogForm = ({ blog, allBlogs, onBack }) => {
         <Section icon={<FileText size={18} />} title="Content Editor">
           <div>
             <label className={labelCls}>Content</label>
-            <div className="overflow-hidden rounded-xl bg-white text-black">
-              <ReactQuill theme="snow" value={formData.content} onChange={(value) => setFormData((prev) => ({ ...prev, content: value }))} className="h-80 mb-12" />
-            </div>
+            <textarea
+              name="content"
+              rows={16}
+              value={formData.content}
+              onChange={handleChange}
+              className={`${inputCls} resize-y font-mono leading-relaxed`}
+            />
             <p className="mt-2 text-xs text-text-muted">Auto reading time: {generatedSeo.readingTime} min</p>
           </div>
         </Section>

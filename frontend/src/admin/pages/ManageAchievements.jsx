@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -16,7 +16,7 @@ const ManageAchievements = () => {
         await api.delete(`/api/achievements/${id}`);
         toast.success('Achievement deleted');
         window.location.reload();
-      } catch (error) {
+      } catch {
         toast.error('Failed to delete achievement');
       }
     }

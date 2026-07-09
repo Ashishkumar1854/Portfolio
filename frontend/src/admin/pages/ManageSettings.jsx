@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { BookOpen, Download, Lock, Settings, SlidersHorizontal, Unlock } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -112,7 +112,7 @@ const ManageSettings = () => {
   const [localSettings, setLocalSettings] = useState(settings);
   const [savingId, setSavingId] = useState(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setLocalSettings(settings);
   }, [settings]);
 

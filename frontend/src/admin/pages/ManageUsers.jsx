@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Trash2, Shield, User, ShieldAlert } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -14,7 +13,7 @@ const ManageUsers = () => {
         await api.delete(`/api/auth/users/${id}`);
         toast.success(`User ${name} has been deleted`);
         window.location.reload();
-      } catch (error) {
+      } catch {
         toast.error('Failed to delete user');
       }
     }
@@ -27,7 +26,7 @@ const ManageUsers = () => {
         await api.put(`/api/auth/users/${id}/role`, { role: newRole });
         toast.success(`Role updated to ${newRole}`);
         window.location.reload();
-      } catch (error) {
+      } catch {
         toast.error('Failed to update role');
       }
     }

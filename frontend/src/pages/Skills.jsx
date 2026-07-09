@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Bot, Workflow, Layers, Globe, Brain, Cpu } from 'lucide-react';
 import { motion } from 'framer-motion';
 import SectionHeading from '../components/ui/SectionHeading';
@@ -125,7 +125,7 @@ const Skills = () => {
 
         {/* ── Highlight boxes ── */}
         <div className="skills-3d-stage grid grid-cols-1 sm:grid-cols-3 gap-4 mb-16">
-          {HIGHLIGHTS.map((h, i) => (
+          {HIGHLIGHTS.map((h) => (
             <div
               key={h.title}
               className="skills-3d-card group"
@@ -147,7 +147,7 @@ const Skills = () => {
             Core Expertise
           </p>
           <div className="skills-3d-stage grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {EXPERTISE.map((e, i) => (
+            {EXPERTISE.map((e) => (
               <div
                 key={e.label}
                 role="button"
@@ -202,7 +202,7 @@ const Skills = () => {
             </div>
           ) : filteredSkills.length > 0 ? (
             <div key={activeTab} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredSkills.map((skill, index) => (
+                {filteredSkills.map((skill) => (
                   <div
                     key={skill._id}
                     className="p-4 bg-bg-elevated border border-border-subtle rounded-2xl flex flex-col gap-3 hover:border-accent-blue/20 transition-all"

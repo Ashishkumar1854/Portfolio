@@ -24,7 +24,6 @@ const useApi = (url, initialData = null) => {
   }, [url]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh().catch(() => {});
   }, [refresh]);
 

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Edit2, Image as ImageIcon, Plus, Trash2, X as XIcon } from 'lucide-react';
 import toast from 'react-hot-toast';

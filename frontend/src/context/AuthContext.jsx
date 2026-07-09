@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const { data } = await api.get('/api/auth/profile');
         setUser(data);
-      } catch (error) {
+      } catch {
         setUser(null);
       } finally {
         setLoading(false);
@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
       await api.post('/api/auth/logout');
       setUser(null);
       toast.success('Logged out successfully');
-    } catch (error) {
+    } catch {
       toast.error('Logout failed');
     }
   };
@@ -86,4 +86,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => React.useContext(AuthContext);
+export const useAuth = () => useContext(AuthContext);

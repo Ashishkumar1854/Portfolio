@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Plus, Edit2, Trash2, Gift, Shield, Sparkles, 
-  Compass, Cpu, MessageSquare, Users, Bell, Trophy, 
-  BookOpen, HelpCircle, Star, Award, Zap, CheckCircle2,
-  X, ArrowLeft
+  Compass, Cpu, MessageSquare, Users, Bell, Trophy,
+  BookOpen, Star, Award, Zap, CheckCircle2,
+  ArrowLeft
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useApi from '../../hooks/useApi';
@@ -28,7 +28,7 @@ const BENEFIT_ICONS = [
 ];
 
 const ManageBenefits = () => {
-  const { data: benefits, loading, error } = useApi('/api/benefits');
+  const { data: benefits, loading } = useApi('/api/benefits');
   const [isEditing, setIsEditing] = useState(false);
   const [currentBenefit, setCurrentBenefit] = useState(null);
 

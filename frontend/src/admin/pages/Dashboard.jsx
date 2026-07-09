@@ -1,8 +1,7 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { 
   Briefcase, FileText, Mail, MessageSquare, PlusCircle, 
-  ArrowRight, ShieldCheck, TrendingUp, Users, Activity, ExternalLink 
+  ArrowRight, ShieldCheck, TrendingUp, Activity, ExternalLink
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useApi from '../../hooks/useApi';

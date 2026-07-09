@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Save, Plus, Edit2, Trash2, Sliders, Award, Workflow } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -133,7 +133,7 @@ const HeroCtaForm = () => {
       };
       await api.put('/api/home-config', payload);
       toast.success('Homepage configuration saved!');
-    } catch (err) {
+    } catch {
       toast.error('Failed to save configuration');
     } finally {
       setSaving(false);
@@ -320,7 +320,7 @@ const TrustBadgesCrud = () => {
         await api.delete(`/api/trust-badges/${id}`);
         toast.success('Highlight removed');
         window.location.reload();
-      } catch (err) {
+      } catch {
         toast.error('Failed to delete');
       }
     }
@@ -338,7 +338,7 @@ const TrustBadgesCrud = () => {
         toast.success('Highlight created');
       }
       window.location.reload();
-    } catch (err) {
+    } catch {
       toast.error('Action failed');
     } finally {
       setSubmitting(false);
@@ -481,7 +481,7 @@ const ProcessStepsCrud = () => {
         await api.delete(`/api/process-steps/${id}`);
         toast.success('Step deleted');
         window.location.reload();
-      } catch (err) {
+      } catch {
         toast.error('Failed to delete step');
       }
     }
@@ -499,7 +499,7 @@ const ProcessStepsCrud = () => {
         toast.success('Step created');
       }
       window.location.reload();
-    } catch (err) {
+    } catch {
       toast.error('Action failed');
     } finally {
       setSubmitting(false);

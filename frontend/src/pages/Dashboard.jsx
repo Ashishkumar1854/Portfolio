@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User as UserIcon, Bell, Save,
@@ -114,7 +114,7 @@ const Dashboard = () => {
       await api.put('/api/auth/profile', { password: passwordData.newPassword });
       toast.success('Password updated ✓');
       setPasswordData({ newPassword: '', confirmNewPassword: '' });
-    } catch (err) {
+    } catch {
       toast.error('Failed to update password');
     }
   };

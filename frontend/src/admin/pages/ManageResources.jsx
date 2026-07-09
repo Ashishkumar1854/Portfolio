@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Download, Edit2, Eye, FileText, Globe, Lock, Plus, Search, Trash2, Unlock } from 'lucide-react';
 import toast from 'react-hot-toast';

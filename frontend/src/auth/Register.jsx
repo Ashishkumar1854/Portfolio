@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { motion } from 'framer-motion';
@@ -39,7 +39,7 @@ const Register = () => {
       try {
         const { data } = await api.get('/api/benefits');
         setBenefits(data.length > 0 ? data : DEFAULT_BENEFITS);
-      } catch (err) {
+      } catch {
         setBenefits(DEFAULT_BENEFITS);
       }
     };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, Upload, FileText, ArrowRight, Save, Trash2, Plus, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -59,7 +59,7 @@ const ManageAbout = () => {
         setContactAddress(data.contactAddress || '');
         setFollowUrl(data.followUrl || '');
       }
-    } catch (err) {
+    } catch {
       toast.error('Failed to load profile details');
     } finally {
       setLoading(false);
